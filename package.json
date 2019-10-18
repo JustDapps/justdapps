@@ -1,0 +1,6 @@
+{
+    "private": true,
+    "name": "justdapps",
+    "workspaces": ["packages/*"],
+    "scripts": {}
+ }
