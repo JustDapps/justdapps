@@ -1,9 +1,11 @@
 const express = require('express');
+
 const router = express.Router();
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
+router.post('/google', (req, res, next) => {
+    console.log('Authentication via Google');
+    res.send('OK');
 });
 
 module.exports = router;
