@@ -1,9 +1,9 @@
 import React from 'react';
-import {Tmp} from '@justdapps/react-components';
+import WelcomePage from './components/WelcomePage';
 
 function App() {
   return (
-    <Tmp />
+    <WelcomePage />
   );
 }
 
