@@ -8,7 +8,8 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}\\packages\\api-server\\bin\\www"
+            "program": "${workspaceFolder}\\packages\\api-server\\bin\\www",
+            "cwd": "${workspaceFolder}\\packages\\api-server\\"
         }
     ]
 }
