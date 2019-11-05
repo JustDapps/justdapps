@@ -1,11 +1,23 @@
 const express = require('express');
+const passport = require('passport');
+require('../auth/passport')();
+const { generateToken } = require('../auth/token');
 
 const router = express.Router();
 
 /* GET users listing. */
-router.post('/google', (req, res, next) => {
-    console.log('Authentication via Google');
-    res.send('OK');
-});
+router.post('/google',
+  passport.authenticate('google-token', { session: false }),
+  (req, res, next) => {
+    if (!req.user) {
+      return res.send(401, 'User Not Authenticated');
+    }
+    req.auth = {
+      id: req.user.id,
+    };
+
+    next();
+  },
+  generateToken);
 
 module.exports = router;

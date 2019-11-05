@@ -2,13 +2,38 @@ import React from 'react';
 import {GoogleLogin} from 'react-google-login';
 
 const WelcomePage = (props) => {
-    const onGoogleResponse = res => {
-        console.log(res);
+    const onGoogleResponse = (response) => {
+        console.log(response);
+        const tokenBlob = new Blob(
+            [JSON.stringify({access_token: response.accessToken}, null, 2)],
+            {type: 'application/json'}
+        );
+        const options = {
+            method: 'POST',
+            body: tokenBlob,
+            mode: 'cors',
+            cache: 'default'
+        };
+
+        fetch('http://localhost:3001/auth/google', options)
+            .then(r => {
+                const token = r.headers.get('x-auth-token');
+                r.json()
+                    .then(user => {
+                        if (token) {
+                            //this.setState({isAuthenticated: true, user, token});
+                            console.log(`user ${JSON.stringify(user)}`);
+                            console.log(`token ${token}`);
+                        }
+                    })
+            });
+    };
+
+    const onGoogleFailure = error => {
+        alert(error);
     }
 
-    const onGoogleFailure = res => {
-        console.log(res);
-    }
+    //const [state, setstate] = useState({isAuthenticated: false})
 
     return <>
         <div>
