@@ -9,8 +9,7 @@ const createToken = (auth) => jwt.sign({
 
 const generateToken = (req, res, next) => {
   req.token = createToken(req.auth);
-  res.setHeader('x-auth-token', req.token);
-  return res.status(200).send(JSON.stringify(req.user));
+  return res.cookie('token', req.token, {httpOnly: true}).status(200).send(JSON.stringify(req.user.displayName));
 };
 
 module.exports = {
