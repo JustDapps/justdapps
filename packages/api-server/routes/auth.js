@@ -15,6 +15,9 @@ router.post('/google',
     req.auth = {
       id: req.user.id,
     };
+    req.user = {
+      displayName : req.user.displayName,
+    };
 
     next();
   },
