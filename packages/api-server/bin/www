@@ -7,7 +7,15 @@ require('dotenv').config();
 
 const http = require('http');
 const debug = require('debug')('api-server:server');
+const db = require('@justdapps/data-mongodb');
 const app = require('../app');
+
+db.connect(process.env.DB_PATH, (err) => {
+  if (err) {
+    console.log(err);
+  }
+});
+
 
 /**
  * Get port from environment and store in Express.
