@@ -2,5 +2,8 @@
   "name": "@justdapps/data-mongodb",
   "version": "0.1.0",
   "main": "index.js",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "mongoose": "^5.7.8"
+  }
 }
