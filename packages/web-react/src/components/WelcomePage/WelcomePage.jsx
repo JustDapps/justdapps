@@ -12,7 +12,8 @@ const WelcomePage = (props) => {
             method: 'POST',
             body: tokenBlob,
             mode: 'cors',
-            cache: 'default'
+            cache: 'default',
+            credentials: 'include',
         };
 
         fetch('http://localhost:3001/auth/google', options)
