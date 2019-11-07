@@ -13,9 +13,8 @@ const init = () => {
     (accessToken, refreshToken, profile, done) => {
       db.upsertGoogleUser(profile.id, profile.emails[0].value, (err, user) => {
         done(err, user);
-      })
-    },
-  )
+      });
+    }),
   );
 };
 
