@@ -1,10 +1,20 @@
 import React from 'react';
+import {connect} from 'react-redux';
 import WelcomePage from './components/WelcomePage';
+import MainPage from './components/MainPage';
 
-function App() {
+function App({isAuthenticated}) {
   return (
-    <WelcomePage />
+    <>
+      {
+        isAuthenticated ?
+          (<MainPage />) :
+          (<WelcomePage />)
+      }
+    </>
   );
 }
 
-export default App;
+export default connect(
+  (state) => ({isAuthenticated: state.auth.isAuthenticated})
+)(App);
