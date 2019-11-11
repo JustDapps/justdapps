@@ -1,12 +1,12 @@
 import React from 'react';
-import {GoogleLogin} from 'react-google-login';
+import { GoogleLogin } from 'react-google-login';
 
 const WelcomePage = (props) => {
     const onGoogleResponse = (response) => {
         console.log(response);
         const tokenBlob = new Blob(
-            [JSON.stringify({access_token: response.accessToken}, null, 2)],
-            {type: 'application/json'}
+            [JSON.stringify({ access_token: response.accessToken }, null, 2)],
+            { type: 'application/json' }
         );
         const options = {
             method: 'POST',
@@ -34,6 +34,22 @@ const WelcomePage = (props) => {
         alert(error);
     }
 
+    const testSecretApi = () => {
+        const options = {
+            method: 'GET',
+            mode: 'cors',
+            credentials: 'include',
+        };
+
+        fetch('http://localhost:3001/models/', options)
+            .then(response => {
+                response.text()
+                    .then(res => {
+                        console.log(res);
+                    })
+            })
+    }
+
     //const [state, setstate] = useState({isAuthenticated: false})
 
     return <>
@@ -46,6 +62,11 @@ const WelcomePage = (props) => {
             onSuccess={onGoogleResponse}
             onFailure={onGoogleFailure}
         />
+
+        <button
+            onClick={testSecretApi}>
+            test secret api
+        </button>
     </>
 }
 
