@@ -3,6 +3,12 @@
     "rules": {
         "linebreak-style": "off",
         "no-use-before-define": "off",
-        "no-unused-vars": ["warn", { "argsIgnorePattern": "next" }]
+        "no-unused-vars": [
+            "warn",
+            {
+                "argsIgnorePattern": "next"
+            }
+        ],
+        "object-curly-spacing": 0
     }
 }
