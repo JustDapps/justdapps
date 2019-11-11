@@ -10,7 +10,7 @@ process.env.TOKEN_PRIVATE_KEY, {
 
 const generateToken = (req, res, next) => {
   req.token = createToken(req.auth);
-  return res.cookie('token', req.token, { httpOnly: true }).status(200).send(JSON.stringify(req.user.displayName));
+  return res.cookie('token', req.token, {httpOnly: true}).status(200).json(req.user);
 };
 
 module.exports = {
