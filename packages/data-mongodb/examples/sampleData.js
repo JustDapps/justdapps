@@ -35,32 +35,32 @@ const models = [
     relations: [{
       source: 'owner',
       target: 'storage',
-      set: 'target.transferOwnership(source)',
+      setOps: 'target.transferOwnership(source)',
       validate: '',
     }, {
       source: 'owner',
       target: 'payment',
-      set: 'target.transferOwnership(source)',
+      setOps: 'target.transferOwnership(source)',
       validate: '',
     }, {
       source: 'admin',
       target: 'storage',
-      set: 'target.setManager(source)',
+      setOps: 'target.setManager(source)',
       validate: '',
     }, {
       source: 'admin',
       target: 'payment',
-      set: 'target.setManager(source)',
+      setOps: 'target.setManager(source)',
       validate: '',
     }, {
       source: 'payment',
       target: 'storage',
-      set: 'target.setManager(source)',
+      setOps: 'target.setManager(source)',
       validate: '',
     }],
     dapps: [{
       networkId: 3,
-      desciption: 'dev ropsten contracts',
+      description: 'dev ropsten contracts',
       entities: [{
         name: 'storage',
         address: '0xD1a8C9a603676925fa319DCB639BC86b5036735B',
@@ -79,27 +79,27 @@ const models = [
       relations: [{
         source: 'owner',
         target: 'storage',
-        set: 'target.transferOwnership(source)',
+        setOps: 'target.transferOwnership(source)',
         validate: '',
       }, {
         source: 'owner',
         target: 'payment',
-        set: 'target.transferOwnership(source)',
+        setOps: 'target.transferOwnership(source)',
         validate: '',
       }, {
         source: 'admin',
         target: 'storage',
-        set: 'target.setManager(source)',
+        setOps: 'target.setManager(source)',
         validate: '',
       }, {
         source: 'admin',
         target: 'payment',
-        set: 'target.setManager(source)',
+        setOps: 'target.setManager(source)',
         validate: '',
       }, {
         source: 'payment',
         target: 'storage',
-        set: 'target.setManager(source)',
+        setOps: 'target.setManager(source)',
         validate: '',
       }],
     }],
