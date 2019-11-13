@@ -7,7 +7,17 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
+            "name": "populate db",
+            "program": "${workspaceFolder}\\packages\\data-mongodb\\examples\\saveSamples.js",
+            "cwd": "${workspaceFolder}\\packages\\data-mongodb\\examples\\",
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "start api",
             "program": "${workspaceFolder}\\packages\\api-server\\bin\\www",
             "cwd": "${workspaceFolder}\\packages\\api-server\\"
         }
