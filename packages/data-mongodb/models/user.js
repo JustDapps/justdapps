@@ -5,7 +5,7 @@ const authTypes = {
 };
 
 const userSchema = mongoose.Schema({
-  _id: mongoose.Schema.Types.ObjectId,
+  _id: {type: mongoose.Schema.Types.ObjectId, auto: true},
   authProvider: {type: String, required: true},
   profile: {
     id: String,
