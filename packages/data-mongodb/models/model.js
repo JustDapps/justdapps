@@ -56,11 +56,18 @@ modelSchema.statics.findByUser = function findByUser(userId) {
 };
 
 modelSchema.statics.addEmpty = function findByUser(name, description, userId) {
-  return this.create({
+  const newModel = new this({
     name,
     description,
     userId: new ObjectId(userId),
   });
+
+  return newModel
+    .save()
+    .then((err) => {
+      if (err) throw err;
+      return newModel._id.toString();
+    });
 };
 
 const model = mongoose.model('Model', modelSchema);
