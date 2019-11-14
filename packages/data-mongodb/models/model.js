@@ -1,4 +1,11 @@
+/*
+  This module describes dapp model collection
+*/
+
 const mongoose = require('mongoose');
+
+const {ObjectId} = mongoose.Types;
+const {modelName} = require('./user');
 
 const entityType = mongoose.Schema({
   name: {type: String, required: true},
@@ -17,7 +24,7 @@ const relationType = mongoose.Schema({
 
 const modelSchema = new mongoose.Schema({
   _id: {type: mongoose.Schema.Types.ObjectId, auto: true},
-  userId: mongoose.Schema.Types.ObjectId,
+  userId: {type: mongoose.Schema.Types.ObjectId, ref: modelName},
 
   name: {type: String, required: true},
   description: {type: String, default: ''},
@@ -33,6 +40,28 @@ const modelSchema = new mongoose.Schema({
     relations: [relationType],
   }],
 });
+
+/*
+methods:
+- select by userId
+- add empty by userId
+*/
+modelSchema.statics.findByUser = function findByUser(userId) {
+  return this
+    .find({
+      userId: new ObjectId(userId),
+    })
+    .lean()
+    .exec();
+};
+
+modelSchema.statics.addEmpty = function findByUser(name, description, userId) {
+  return this.create({
+    name,
+    description,
+    userId: new ObjectId(userId),
+  });
+};
 
 const model = mongoose.model('Model', modelSchema);
 module.exports = model;
