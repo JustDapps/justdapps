@@ -3,8 +3,10 @@ const {User, Model} = require('../models');
 const {
   getTotalUsers, cleanup, addGoogleUsers, addModelsForUser,
 } = require('./testUtils');
+const db = require('../index.js');
 
-describe('User', () => {
+
+describe('db.user', () => {
   beforeEach(async () => {
     cleanup();
   });
@@ -15,7 +17,7 @@ describe('User', () => {
     it(`should add new user: ${userName}`, async () => {
       const beforeCount = await getTotalUsers();
 
-      await User.upsertGoogleUser('googleid1', userName);
+      await db.user.upsertGoogleUser('googleid1', userName);
 
       const afterCount = await getTotalUsers();
       expect(afterCount - beforeCount).to.equal(1);
@@ -25,7 +27,7 @@ describe('User', () => {
       const firstTimeData = await User.upsertGoogleUser('googleid1', userName);
       const beforeCount = await getTotalUsers();
 
-      const secondTimeData = await User.upsertGoogleUser('googleid1', userName);
+      const secondTimeData = await db.user.upsertGoogleUser('googleid1', userName);
 
       const afterCount = await getTotalUsers();
       expect(afterCount).to.equal(beforeCount);
@@ -34,32 +36,35 @@ describe('User', () => {
   });
 });
 
-describe.only('Model', () => {
+
+describe('db.model', () => {
   let userIds;
   beforeEach(async () => {
     await cleanup();
-    userIds = await addGoogleUsers(['user1', 'user2']);
+    userIds = await addGoogleUsers(['user1', 'user2', 'user3']);
     await addModelsForUser([{name: 'model1'}, {name: 'model2'}], 'user1');
+    await addModelsForUser([{name: 'model3'}], 'user2');
   });
 
   describe('findByUser', () => {
     it('should fetch all models (2) for user1 ', async () => {
-      const models = await Model.findByUser(userIds[0]);
+      const models = await db.model.findByUser(userIds.user1);
       expect(models).to.have.lengthOf(2);
+      expect(models.map((model) => model.name)).to.include('model1').and.include('model2');
     });
-    it('should fetch no models for user2', async () => {
-      const models = await Model.findByUser(userIds[1]);
+    it('should fetch no models for user3', async () => {
+      const models = await db.model.findByUser(userIds.user3);
       expect(models).to.have.lengthOf(0);
     });
   });
 
   describe('addForUser', () => {
     it('should add new model for user1', async () => {
-      const {length: beforeCount} = await Model.findByUser(userIds[0]);
+      const {length: beforeCount} = await Model.findByUser(userIds.user1);
 
-      await Model.addForUser({name: '1', description: '2'}, userIds[0]);
+      await db.model.addForUser({name: '1', description: '2'}, userIds.user1);
 
-      const {length: afterCount} = await Model.findByUser(userIds[0]);
+      const {length: afterCount} = await Model.findByUser(userIds.user1);
       expect(afterCount - beforeCount).to.equal(1);
     });
   });
