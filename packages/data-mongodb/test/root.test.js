@@ -1,15 +1,37 @@
 const mongoose = require('mongoose');
+const {MongoMemoryServer} = require('mongodb-memory-server');
+
+let mongoServer;
+
+const localDb = 'mongodb://localhost:27017/justdapps-test';
+
+function prepareServer(useMemoryServer = true) {
+  if (useMemoryServer) {
+    mongoServer = new MongoMemoryServer();
+    return mongoServer
+      .getConnectionString();
+  }
+  return Promise.resolve(localDb);
+}
 
 before((done) => {
-  mongoose.connect('mongodb://localhost:27017/justdapps-test', {useUnifiedTopology: true, useNewUrlParser: true});
-  const db = mongoose.connection;
-  db.on('error', console.error.bind(console, 'connection error'));
-  db.once('open', () => {
-    console.log('We are connected to test database!');
-    done();
-  });
+  prepareServer()
+    .then((dbPath) => {
+      console.log(`Connecting to memory server ${dbPath}`);
+      return mongoose.connect(
+        dbPath,
+        {useNewUrlParser: true, useUnifiedTopology: true},
+        (err) => {
+          if (err) done(err);
+        },
+      );
+    })
+    .then(() => done());
 });
 
-after(() => {
-  mongoose.disconnect();
+after(async () => {
+  await mongoose.disconnect();
+  if (mongoServer) {
+    await mongoServer.stop();
+  }
 });
