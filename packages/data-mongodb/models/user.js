@@ -13,32 +13,44 @@ const userSchema = mongoose.Schema({
   },
 });
 
-
-userSchema.statics.upsertGoogleUser = function upsertGoogleUser(id, displayName, cb) {
+/**
+ * Returns google-authed user data or inserts it
+ */
+userSchema.statics.upsertGoogleUser = function upsertGoogleUser(id, displayName) {
   return this.findOne({
     authProvider: authTypes.google,
     'profile.id': id,
-  }, (err, user) => {
-    const format = (userToFormat) => ({
-      key: userToFormat._id.toString(),
-      id: userToFormat.profile.id,
-      displayName: userToFormat.profile.displayName,
-    });
-
-    if (!user) {
-      const newUser = new this({
-        _id: new mongoose.Types.ObjectId(),
-        authProvider: authTypes.google,
-        profile: {
-          id,
-          displayName,
-        },
+  })
+    .exec()
+    .then((user) => {
+      const format = (userToFormat) => ({
+        id: userToFormat._id.toString(),
+        displayName: userToFormat.profile.displayName,
       });
 
-      return newUser.save((error, savedUser) => cb(error, format(savedUser)));
-    }
-    return cb(err, format(user));
-  });
+      if (!user) {
+        const newUser = new this({
+          _id: new mongoose.Types.ObjectId(),
+          authProvider: authTypes.google,
+          profile: {
+            id,
+            displayName,
+          },
+        });
+
+        return newUser.save().then((savedUser) => format(savedUser));
+      }
+      return format(user);
+    });
+};
+
+/**
+ * Returns string representation of specified user's _id
+ */
+userSchema.statics.getUserId = function getUserId(displayName, authProvider = authTypes.google) {
+  return this.findOne({authProvider, 'profile.displayName': displayName})
+    .exec()
+    .then((user) => user._id.toString());
 };
 
 
