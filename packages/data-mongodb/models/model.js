@@ -26,19 +26,22 @@ const modelSchema = new mongoose.Schema({
   _id: {type: mongoose.Schema.Types.ObjectId, auto: true},
   userId: {type: mongoose.Schema.Types.ObjectId, ref: modelName},
 
-  name: {type: String, required: true},
+  name: {type: String, required: true, default: ''},
   description: {type: String, default: ''},
 
-  entities: [entityType],
-  relations: [relationType],
+  entities: {type: [entityType], default: []},
+  relations: {type: [relationType], default: []},
 
-  dapps: [{
-    networkId: Number,
-    description: {type: String, default: ''},
+  dapps: {
+    type: [{
+      networkId: Number,
+      description: {type: String, default: ''},
 
-    entities: [entityType],
-    relations: [relationType],
-  }],
+      entities: [entityType],
+      relations: [relationType],
+    }],
+    default: [],
+  },
 });
 
 /*
@@ -55,20 +58,18 @@ modelSchema.statics.findByUser = function findByUser(userId) {
     .exec();
 };
 
-modelSchema.statics.addEmpty = function findByUser(name, description, userId) {
+/** Saves new model with specified userId and returns its _id */
+modelSchema.statics.addForUser = function addForUser(modelProperties, userId) {
   const newModel = new this({
-    name,
-    description,
+    ...modelProperties,
     userId: new ObjectId(userId),
   });
 
   return newModel
     .save()
-    .then((err) => {
-      if (err) throw err;
-      return newModel._id.toString();
-    });
+    .then((result) => result._id.toString());
 };
+
 
 const model = mongoose.model('Model', modelSchema);
 module.exports = model;
