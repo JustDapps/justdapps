@@ -16,5 +16,6 @@ module.exports = {
   model: {
     findByUser: (userId) => Model.findByUser(userId),
     addForUser: (modelProperties, userId) => Model.addForUser(modelProperties, userId),
+    delete: (id) => Model.delete(id),
   },
 };

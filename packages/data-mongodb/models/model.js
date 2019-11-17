@@ -70,6 +70,10 @@ modelSchema.statics.addForUser = function addForUser(modelProperties, userId) {
     .then((result) => result._id.toString());
 };
 
+modelSchema.statics.delete = function deleteById(id) {
+  return this.findByIdAndDelete(id).exec();
+};
+
 
 const model = mongoose.model('Model', modelSchema);
 module.exports = model;
