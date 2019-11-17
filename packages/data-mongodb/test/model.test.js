@@ -67,5 +67,22 @@ describe('db.model', () => {
       const {length: afterCount} = await Model.findByUser(userIds.user1);
       expect(afterCount - beforeCount).to.equal(1);
     });
+
+    it('should return new model id as string', async () => {
+      const id = await db.model.addForUser({name: '1', description: '2'}, userIds.user1);
+      expect(id).to.be.a('string').and.not.empty;
+    });
+  });
+
+  describe('delete', () => {
+    it('should delete model specified by its id', async () => {
+      const id = await db.model.addForUser({name: '1', description: '2'}, userIds.user3);
+      const {length: beforeCount} = await Model.findByUser(userIds.user3);
+
+      await db.model.delete(id);
+
+      const {length: afterCount} = await Model.findByUser(userIds.user3);
+      expect(beforeCount - afterCount).to.equal(1);
+    });
   });
 });
