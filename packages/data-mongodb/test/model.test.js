@@ -1,9 +1,14 @@
-const {expect} = require('chai');
+const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
 const {User, Model} = require('../models');
 const {
   getTotalUsers, cleanup, addGoogleUsers, addModelsForUser,
 } = require('./testUtils');
 const db = require('../index.js');
+
+
+chai.use(chaiAsPromised);
+const {expect} = chai;
 
 
 describe('db.user', () => {
@@ -39,11 +44,19 @@ describe('db.user', () => {
 
 describe('db.model', () => {
   let userIds;
+  let user1Models;
+  let user2Models;
+
+  console.log('Setup for tests');
+  console.log('user1: [model1, model2]');
+  console.log('user2: [model3]');
+  console.log('user3: []');
+
   beforeEach(async () => {
     await cleanup();
     userIds = await addGoogleUsers(['user1', 'user2', 'user3']);
-    await addModelsForUser([{name: 'model1'}, {name: 'model2'}], 'user1');
-    await addModelsForUser([{name: 'model3'}], 'user2');
+    user1Models = await addModelsForUser([{name: 'model1'}, {name: 'model2'}], 'user1');
+    user2Models = await addModelsForUser([{name: 'model3'}], 'user2');
   });
 
   describe('findByUser', () => {
@@ -74,15 +87,50 @@ describe('db.model', () => {
     });
   });
 
+  describe('checkOwner', () => {
+    let modelId;
+    beforeEach(async () => {
+      modelId = await db.model.addForUser({name: 'test-checkOwner'}, userIds.user1);
+    });
+
+    it('should check if user1 is owner of model1 and return true', async () => {
+      const check = await db.model.checkOwner(userIds.user1, modelId);
+      expect(check).to.equal(true);
+    });
+
+    it('should check if user3 is owner of model3 and return false', async () => {
+      const check = await db.model.checkOwner(userIds.user3, modelId);
+      expect(check).to.equal(false);
+    });
+  });
+
   describe('delete', () => {
-    it('should delete model specified by its id', async () => {
+    it('should delete model specified by its id and return true', async () => {
       const id = await db.model.addForUser({name: '1', description: '2'}, userIds.user3);
       const {length: beforeCount} = await Model.findByUser(userIds.user3);
 
-      await db.model.delete(id);
+      const result = await db.model.delete(id);
 
       const {length: afterCount} = await Model.findByUser(userIds.user3);
       expect(beforeCount - afterCount).to.equal(1);
+      expect(result).to.equal(true);
+    });
+
+    it('should change nothing if model id does not exist', async () => {
+      const {length: beforeCount} = await Model.find({});
+
+      await db.model.delete(userIds.user1);
+
+      const {length: afterCount} = await Model.find({});
+      expect(beforeCount).to.equal(afterCount);
+    });
+
+    it('should throw error if invalid id provided', async () => expect(db.model.delete('012345')).to.eventually.be.rejected);
+  });
+
+  describe('update', () => {
+    it('should update model1 with new description', async () => {
+
     });
   });
 });

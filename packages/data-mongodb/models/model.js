@@ -44,11 +44,6 @@ const modelSchema = new mongoose.Schema({
   },
 });
 
-/*
-methods:
-- select by userId
-- add empty by userId
-*/
 modelSchema.statics.findByUser = function findByUser(userId) {
   return this
     .find({
@@ -56,6 +51,14 @@ modelSchema.statics.findByUser = function findByUser(userId) {
     })
     .lean()
     .exec();
+};
+
+/** Checks if specified user is owner of the specified model */
+modelSchema.statics.checkOwner = function checkOwner(userId, modelId) {
+  return this.findOne({_id: new ObjectId(modelId)})
+    .select('userId')
+    .exec()
+    .then(({userId: modelUserId}) => userId === modelUserId.toString());
 };
 
 /** Saves new model with specified userId and returns its _id */
@@ -71,7 +74,11 @@ modelSchema.statics.addForUser = function addForUser(modelProperties, userId) {
 };
 
 modelSchema.statics.delete = function deleteById(id) {
-  return this.findByIdAndDelete(id).exec();
+  return this.findByIdAndDelete(id).exec().then(() => true);
+};
+
+modelSchema.statics.update = function update(modelProperties, id) {
+
 };
 
 

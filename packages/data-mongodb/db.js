@@ -15,6 +15,7 @@ module.exports = {
   },
 
   model: {
+    checkOwner: (userId, modelId) => Model.checkOwner(userId, modelId),
     findByUser: (userId) => Model.findByUser(userId),
     addForUser: (modelProperties, userId) => Model.addForUser(modelProperties, userId),
     delete: (id) => Model.delete(id),
