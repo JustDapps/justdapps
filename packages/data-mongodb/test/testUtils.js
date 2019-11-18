@@ -24,7 +24,19 @@ module.exports.addGoogleUsers = (names) => Promise.all(
     {},
   ));
 
-module.exports.addModelsForUser = async (models, userName) => {
+
+/** Inserts array of models with specified User id, returns object
+ * {modelname1: modelid1, modelname2: modelid2, ...}
+ */
+module.exports.addModelsForUser = async (rawModels, userName) => {
   const userId = await User.getUserId(userName);
-  return Promise.all(models.map((model) => Model.addForUser(model, userId)));
+  return Promise.all(
+    rawModels.map(
+      (model) => Model.addForUser(model, userId)
+        .then((newModelId) => ({id: newModelId, name: model.name})),
+    ),
+  ).then((models) => models.reduce(
+    (accum, value) => ({...accum, [value.name]: value.id}),
+    {},
+  ));
 };
