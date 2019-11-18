@@ -2,11 +2,12 @@ const mongoose = require('mongoose');
 const {User, Model} = require('./models');
 
 module.exports = {
-  connect: (path, cb) => mongoose.connect(
+  connect: (path) => mongoose.connect(
     path,
     {useNewUrlParser: true, useUnifiedTopology: true},
-    cb,
   ),
+
+  disconnect: () => mongoose.disconnect(),
 
   user: {
     upsertGoogleUser: (id, displayName, cb) => User
