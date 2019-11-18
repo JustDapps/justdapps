@@ -129,8 +129,15 @@ describe('db.model', () => {
   });
 
   describe('update', () => {
-    it('should update model1 with new description', async () => {
+    it('should update model1 with new description and return true', async () => {
+      const id = user1Models.model1;
+      const description = 'Updated description';
 
+      await db.model.update({description}, user1Models.model1);
+
+      const model = await Model.findOne({_id: id});
+      expect(model.description).to.equal(description);
+      expect(model.name).to.equal('model1');
     });
   });
 });

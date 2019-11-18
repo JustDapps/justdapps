@@ -78,7 +78,12 @@ modelSchema.statics.delete = function deleteById(id) {
 };
 
 modelSchema.statics.update = function update(modelProperties, id) {
-
+  return this.findByIdAndUpdate(
+    id,
+    modelProperties,
+    {useFindAndModify: false},
+  ).exec()
+    .then(() => true);
 };
 
 
