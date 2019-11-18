@@ -72,17 +72,13 @@ describe('db.model', () => {
   });
 
   describe('addForUser', () => {
-    it('should add new model for user1', async () => {
+    it('should add new model for user1 and return its id as string', async () => {
       const {length: beforeCount} = await Model.findByUser(userIds.user1);
 
-      await db.model.addForUser({name: '1', description: '2'}, userIds.user1);
+      const id = await db.model.addForUser({name: '1', description: '2'}, userIds.user1);
 
       const {length: afterCount} = await Model.findByUser(userIds.user1);
       expect(afterCount - beforeCount).to.equal(1);
-    });
-
-    it('should return new model id as string', async () => {
-      const id = await db.model.addForUser({name: '1', description: '2'}, userIds.user1);
       expect(id).to.be.a('string').and.not.empty;
     });
   });
@@ -133,11 +129,12 @@ describe('db.model', () => {
       const id = user1Models.model1;
       const description = 'Updated description';
 
-      await db.model.update({description}, user1Models.model1);
+      const result = await db.model.update({description}, user1Models.model1);
 
       const model = await Model.findOne({_id: id});
       expect(model.description).to.equal(description);
       expect(model.name).to.equal('model1');
+      expect(result).to.equal(true);
     });
   });
 });
