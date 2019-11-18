@@ -14,13 +14,19 @@ module.exports.create = function create(req, res) {
 
 
 module.exports.update = function update(req, res) {
-  // check valid user
-
-  res.status(404).json(responseError('NOT IMPLEMENTED YET'));
+  db.model.checkOwner(req.user.id, req.body.modelId)
+    .then((isOwner) => (isOwner
+      ? db.model.update(req.body.model, req.body.modelId).then(() => res.json(responseBody(null)))
+      : res.status(403).json(responseError('Attempt to update model of another user'))
+    ));
 };
 
 
-module.exports.delete = function update(req, res) {
-  // check valid user
-  db.model.delete(req.body.modelId).then(() => res.json(responseBody(null)));
+module.exports.delete = function deleteModel(req, res) {
+  db.model.checkOwner(req.user.id, req.body.modelId)
+    .then((isOwner) => (isOwner
+      ? db.model.delete(req.body.modelId)
+        .then(() => res.json(responseBody(null)))
+      : res.status(403).json(responseError('Attempt to delete model of another user'))
+    ));
 };
