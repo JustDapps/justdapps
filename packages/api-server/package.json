@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "scripts": {
     "start": "node ./bin/www",
-    "dev": "nodemon ./bin/www"
+    "dev": "nodemon ./bin/www",
+    "test": "mocha"
   },
   "dependencies": {
     "@justdapps/data-mongodb": "0.1.0",
@@ -21,6 +22,7 @@
     "request": "^2.88.0"
   },
   "devDependencies": {
+    "chai-http": "^4.3.0",
     "mongodb-memory-server": "^6.0.1",
     "nodemon": "^1.19.4"
   }
