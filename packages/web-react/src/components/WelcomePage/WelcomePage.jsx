@@ -1,11 +1,12 @@
 import React from 'react';
-import {connect} from 'react-redux';
-import {GoogleLogin} from 'react-google-login';
-import {startAuthGoogle, authGoogleFailure} from '../../actions';
+import { connect } from 'react-redux';
+import { GoogleLogin } from 'react-google-login';
+import { startAuthGoogle, authGoogleFailure, loadModels } from '../../actions';
 
-const WelcomePage = ({startAuthGoogle, authGoogleFailure}) => {
+const WelcomePage = ({ startAuthGoogle, authGoogleFailure, loadModels }) => {
     const onGoogleResponse = (response) => {
         startAuthGoogle(response.accessToken);
+        loadModels();
     };
 
     const onGoogleFailure = error => {
@@ -29,5 +30,5 @@ const WelcomePage = ({startAuthGoogle, authGoogleFailure}) => {
 
 export default connect(
     null,
-    {startAuthGoogle, authGoogleFailure}
+    { startAuthGoogle, authGoogleFailure, loadModels }
 )(WelcomePage);
