@@ -1,10 +1,14 @@
 import React from 'react';
-import {connect} from 'react-redux';
+import { connect } from 'react-redux';
+import ModelsBrowser from '../ModelsBrowser/ModelsBrowser';
 
-const MainPage = ({userName}) => {
+const MainPage = ({ userName }) => {
     return (
         <div>
             {`Welcome, ${userName}`}
+            <ModelsBrowser>
+
+            </ModelsBrowser>
         </div>
     );
 };
