@@ -1,11 +1,9 @@
 const express = require('express');
 const passport = require('passport');
-require('../auth/passport')();
 const {generateToken} = require('../auth/token');
 
 const router = express.Router();
 
-/* GET users listing. */
 router.post('/google',
   passport.authenticate('google-token', {session: false}),
   (req, res, next) => {
@@ -19,7 +17,7 @@ router.post('/google',
       displayName: req.user.displayName,
     };
 
-    next();
+    return next();
   },
   generateToken);
 
