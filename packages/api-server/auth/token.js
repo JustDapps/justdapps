@@ -3,7 +3,7 @@
  * Exported `generateToken` middleware writes into `cookies.token` an encrypted token that contains
  * `userId` - app user unique identifier.
  *
- * It requires request object to contain an auth object with the `id` property
+ * It requires request object to contain an `auth` object with the `id` property
  */
 
 const jwt = require('jsonwebtoken');

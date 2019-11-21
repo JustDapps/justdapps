@@ -14,7 +14,12 @@ const userSchema = mongoose.Schema({
 });
 
 /**
- * Returns google-authed user data or inserts it
+ * Fetches google-authed user data or inserts it.
+ *
+ * id:  Google identifier
+ * displayNName: e-mail
+ *
+ * Returns Promise({id: _id, displayName: profile.displayName})
  */
 userSchema.statics.upsertGoogleUser = function upsertGoogleUser(id, displayName) {
   return this.findOne({

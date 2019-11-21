@@ -1,3 +1,7 @@
+/**
+ * This module contains utilities for testing mongodb related functions
+ */
+
 const {User, Model} = require('../models');
 const {users: testUsers, models: testModels} = require('./testData');
 const {cleanupAndSave, clearDatabase} = require('../utils');
