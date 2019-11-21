@@ -12,38 +12,53 @@ const initApp = require('../app');
 const {expect} = chai;
 
 const mockedGoogleId = '0123456778abc';
-const mockUpsertGoogleUser = (id, displayName) => Promise.resolve({id: mockedGoogleId, displayName});
+const mockUpsertGoogleUser = (id, displayName) => Promise.resolve({
+  id: mockedGoogleId,
+  displayName,
+});
 
 // mock database
 const mockDataProvider = {
   user: {
-    upsertGoogleUser: mockDataProvider,
+    upsertGoogleUser: mockUpsertGoogleUser,
   },
 };
 
-describe('/auth', () => {
+describe('/auth/google', () => {
   const app = initApp(mockDataProvider);
+  initPassport(mockDataProvider);
 
   const userProfile = {
-    id: 'google-0123456789',
-    name: 'John Smith',
-    emails: [{value: 'jsmith@gmail.com'}],
+    id: 'mongoid0123',
+    displayName: 'jsmith@gmail.com',
   };
 
-  before((hookDone) => {
+  beforeEach(() => {
     // mock google strategy
     passport.use(new MockStrategy({
       name: 'google-token',
       user: userProfile,
-    }, (user, done) => initPassport.googleAuthCallback(mockDataProvider, user, done)));
+    }));
   });
 
 
-  it('should save valid google token bearer, with displayName=e-mail and authProvider=Google', () => {
-    expect(1).equal(1);
+  it('return 401 code in case of auth error', async () => {
+    // mock strategy with custom callback to return user:null
+    passport.use(new MockStrategy({
+      name: 'google-token',
+      user: userProfile,
+    },
+    (user, done) => {
+      done('Custom error', null);
+      // Perform actions on user, call done once finished
+    }));
+
+    const res = await chai.request(app).post('/auth/google');
+    expect(res).to.have.status(401);
   });
 
-  it('in case of invalid token should return 401 error', () => {
-
+  it('should save JWT token in cookies.token upon successful authentication', async () => {
+    const res = await chai.request(app).post('/auth/google');
+    expect(res).to.have.cookie('token');
   });
 });
