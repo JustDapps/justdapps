@@ -4,11 +4,12 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors');
-
+const initPassport = require('./auth/passport');
 const indexRouter = require('./routes/index');
 const dataProvider = require('./middlewares/dataProvider');
 
 module.exports = (dataSource) => {
+  initPassport();
   const app = express();
 
   app.use(cors({
