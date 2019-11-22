@@ -1,24 +1,42 @@
 const express = require('express');
 const passport = require('passport');
-const {generateToken} = require('../auth/token');
+const {generateToken} = require('../middlewares/auth');
 const {responseError} = require('../utils');
 
 const router = express.Router();
 
-const authPassport = function authPassport(req, res, next) {
+const authPassport = (req, res, next) => {
   passport.authenticate('google-token', (err, user, info) => {
     if (err) {
+      // TODO log error message
       return next(err);
     }
     if (!user) {
-      return res.status(401).json(responseError(
-        info ? `${info.toString()}` : 'Authentication error',
-      ));
+      // TODO log error message `info && info.toString()`
+      return res.status(401).json(responseError('Authentication error'));
     }
 
     req.user = user;
     return next();
   })(req, res, next);
+};
+
+
+/**
+ * Saves req.user to database
+ * req.user is an object with `googleId`, `displayName` properties
+ */
+const saveUser = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json(responseError('User Not Authenticated'));
+  }
+
+  return req.dataSource.user.upsertGoogleUser(req.user.googleId, req.user.displayName)
+    .then((user) => {
+      req.user = user;
+      next();
+    })
+    .catch((err) => next(err));
 };
 
 /**
@@ -31,23 +49,8 @@ const authPassport = function authPassport(req, res, next) {
  * token - encrypted JWT: {userId: user's database id}
  */
 router.post('/google',
-  // passport.authenticate('google-token', {session: false}),
   authPassport,
-  (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json(responseError('User Not Authenticated'));
-    }
-    req.auth = {
-      id: req.user.key,
-    };
-    req.user = {
-      displayName: req.user.displayName,
-    };
-
-    return next();
-  },
-  generateToken,
-  // error handler
-  (err, req, res, next) => res.status(401).json(responseError(err.toString())));
+  saveUser,
+  generateToken);
 
 module.exports = router;

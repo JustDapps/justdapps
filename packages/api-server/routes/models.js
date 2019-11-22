@@ -1,11 +1,11 @@
 const express = require('express');
-const auth = require('../middlewares/auth.js');
+const {requireAuth} = require('../middlewares/auth');
 const modelController = require('../controllers/model.controller');
 
 const router = express.Router();
 
 // this route should require authentication
-router.use(auth);
+router.use(requireAuth);
 
 router.get('/', modelController.find);
 router.post('/', modelController.create);
