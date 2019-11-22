@@ -1,64 +1,80 @@
 require('dotenv').config();
+
 // eslint-disable-next-line import/no-extraneous-dependencies
 const chai = require('chai');
-
 const passport = require('passport');
 const MockStrategy = require('passport-mock-strategy');
 const initPassport = require('../auth/passport');
+const {createToken, verifyToken} = require('../auth/token');
+const initApp = require('../app');
+const {extractCookie} = require('./utils');
 
 chai.use(require('chai-http'));
-const initApp = require('../app');
 
 const {expect} = chai;
 
-const mockedGoogleId = '0123456778abc';
+// mock database
+const mockedGoogleId = 'googleid0123';
+const mockedMongoId = 'mongoid0123';
 const mockUpsertGoogleUser = (id, displayName) => Promise.resolve({
-  id: mockedGoogleId,
+  id: mockedMongoId,
   displayName,
 });
 
-// mock database
 const mockDataProvider = {
   user: {
     upsertGoogleUser: mockUpsertGoogleUser,
   },
 };
 
+
 describe('/auth/google', () => {
   const app = initApp(mockDataProvider);
   initPassport(mockDataProvider);
 
   const userProfile = {
-    id: 'mongoid0123',
+    id: mockedGoogleId,
     displayName: 'jsmith@gmail.com',
   };
 
-  beforeEach(() => {
-    // mock google strategy
-    passport.use(new MockStrategy({
-      name: 'google-token',
-      user: userProfile,
-    }));
+  describe('authentication success', () => {
+    let response;
+    before(async () => {
+      passport.use(new MockStrategy({
+        name: 'google-token',
+        user: userProfile,
+      }));
+
+      response = await chai.request(app).post('/auth/google');
+    });
+
+    it('should save JWT token in cookies.token with userId and return displayName in response bdy ', async () => {
+      expect(response).to.have.cookie('token');
+    });
+    it('decoded cookie should contain userId property equal to database id', () => {
+      const token = extractCookie(response, 'token');
+      const decoded = verifyToken(token);
+      expect(decoded.userId).to.equal(mockedMongoId);
+    });
+    it('response body should contain displayName property equal to user email', () => {
+      expect(response.body.displayName).to.equal(userProfile.displayName);
+    });
   });
 
+  describe('authentication failure', () => {
+    it('return 401 code in case of error in strategy', async () => {
+      // mock strategy with custom callback to return user:null
+      passport.use(new MockStrategy({
+        name: 'google-token',
+        user: userProfile,
+      },
+      (user, done) => {
+        done(null, null, 'Additional info');
+      }));
 
-  it('return 401 code in case of auth error', async () => {
-    // mock strategy with custom callback to return user:null
-    passport.use(new MockStrategy({
-      name: 'google-token',
-      user: userProfile,
-    },
-    (user, done) => {
-      done('Custom error', null);
-      // Perform actions on user, call done once finished
-    }));
+      const res = await chai.request(app).post('/auth/google');
 
-    const res = await chai.request(app).post('/auth/google');
-    expect(res).to.have.status(401);
-  });
-
-  it('should save JWT token in cookies.token upon successful authentication', async () => {
-    const res = await chai.request(app).post('/auth/google');
-    expect(res).to.have.cookie('token');
+      expect(res).to.have.status(401);
+    });
   });
 });

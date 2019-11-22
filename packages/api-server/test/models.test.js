@@ -4,10 +4,10 @@
  * Obtained token should be sent in cookies
  */
 
-describe('/models', () => {
-  describe('/GET', () => {
-    it('should return list of models', () => {
+// describe('/models', () => {
+//   describe('/GET', () => {
+//     it('should return list of models', () => {
 
-    });
-  });
-});
+//     });
+//   });
+// });
