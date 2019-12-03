@@ -1,7 +1,8 @@
+/* eslint-disable import/no-extraneous-dependencies */
 require('dotenv').config();
 
-// eslint-disable-next-line import/no-extraneous-dependencies
 const chai = require('chai');
+const sinon = require('sinon');
 const passport = require('passport');
 const MockStrategy = require('passport-mock-strategy');
 const initPassport = require('../auth/passport');
@@ -13,29 +14,37 @@ chai.use(require('chai-http'));
 
 const {expect} = chai;
 
-// mock database
-const mockedGoogleId = 'googleid0123';
-const mockedMongoId = 'mongoid0123';
-const mockUpsertGoogleUser = (id, displayName) => Promise.resolve({
-  id: mockedMongoId,
-  displayName,
-});
-
-const mockDataProvider = {
-  user: {
-    upsertGoogleUser: mockUpsertGoogleUser,
-  },
-};
-
 
 describe('/auth/google', () => {
-  const app = initApp(mockDataProvider);
-  initPassport(mockDataProvider);
+  let app;
 
+  const mockedGoogleId = 'googleid0123';
+  const mockedMongoId = 'mongoid0123';
+  const userName = 'jsmith@gmail.com';
   const userProfile = {
     id: mockedGoogleId,
-    displayName: 'jsmith@gmail.com',
+    displayName: userName,
   };
+
+  let mockDataProvider;
+
+  before(() => {
+    // mock database
+    mockDataProvider = {
+      user: {
+        upsertGoogleUser: sinon.stub().resolves({
+          id: mockedMongoId,
+          displayName: userName,
+        }),
+      },
+    };
+    app = initApp(mockDataProvider);
+    initPassport(mockDataProvider);
+  });
+
+  after(() => {
+    sinon.restore();
+  });
 
   describe('authentication success', () => {
     let response;
@@ -48,14 +57,20 @@ describe('/auth/google', () => {
       response = await chai.request(app).post('/auth/google');
     });
 
+    it('upsertGoogleUser function should have been called', () => {
+      expect(mockDataProvider.user.upsertGoogleUser.calledOnce).to.equal(true);
+    });
+
     it('should save JWT token in cookies.token with userId and return displayName in response bdy ', async () => {
       expect(response).to.have.cookie('token');
     });
+
     it('decoded cookie should contain userId property equal to database id', () => {
       const token = extractCookie(response, 'token');
       const decoded = verifyToken(token);
       expect(decoded.userId).to.equal(mockedMongoId);
     });
+
     it('response body should contain displayName property equal to user email', () => {
       expect(response.body.displayName).to.equal(userProfile.displayName);
     });
