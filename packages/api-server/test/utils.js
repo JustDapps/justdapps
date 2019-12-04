@@ -10,6 +10,20 @@ const extractCookie = (res, cookieName) => {
   ));
   return match ? match[1] : null;
 };
+
+/**
+ * Attaches cookie `name`:`value` to chai-http request object
+ * @param {*} req chai-http request object
+ * @param {*} name name of cookie to set
+ * @param {*} value cookie value
+ * @returns request object with modified cookies header
+ */
+const setCookie = (req, name, value) => {
+  const cookies = `${name}=${value}`;
+  return req.set('Cookie', cookies);
+};
+
 module.exports = {
   extractCookie,
+  setCookie,
 };
