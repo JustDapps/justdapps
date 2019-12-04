@@ -19,9 +19,10 @@ module.exports.update = function update(req, res) {
         req.body.model,
         req.body.modelId,
       )
-        .then(() => res.json(responseBody(null)))
+        .then((result) => res.json(responseBody({ result })))
       : res.status(403).json(responseError('Attempt to update model of another user'))
-    ));
+    ))
+    .catch((err) => res.status(400).json(responseError('Invalid input')));
 };
 
 
