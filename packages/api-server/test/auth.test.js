@@ -42,10 +42,6 @@ describe('/auth/google', () => {
     initPassport(dataSource);
   });
 
-  after(() => {
-    sinon.restore();
-  });
-
   describe('authentication success', () => {
     let response;
     before(async () => {
@@ -61,7 +57,7 @@ describe('/auth/google', () => {
       expect(dataSource.user.upsertGoogleUser.calledOnce).to.equal(true);
     });
 
-    it('should save JWT token in cookies.token', async () => {
+    it('save JWT token in cookies.token', async () => {
       expect(response).to.have.cookie('token');
     });
 
@@ -77,7 +73,7 @@ describe('/auth/google', () => {
   });
 
   describe('authentication failure', () => {
-    it('return 401 code in case of error in strategy', async () => {
+    it('return code 401 in case of error in strategy', async () => {
       // mock strategy with custom callback to return user:null
       passport.use(new MockStrategy({
         name: 'google-token',
