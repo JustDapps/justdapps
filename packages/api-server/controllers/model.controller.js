@@ -7,7 +7,7 @@ module.exports.find = function find(req, res) {
 
 
 module.exports.create = function create(req, res) {
-  req.dataSource.model.addForUser(req.body.model)
+  req.dataSource.model.addForUser(req.body.model, req.user.id)
     .then((modelId) => res.json(responseBody({ modelId })));
 };
 
