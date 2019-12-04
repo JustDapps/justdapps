@@ -43,6 +43,11 @@ describe('/models', () => {
       app = initApp(dataSource);
     });
 
+    afterEach(() => {
+      dataSource.model.findByUser.resetHistory();
+    });
+
+
     it('return code 200, and list of 2 models in response body. Database `findByUser` called with authenticated user id', async () => {
       const request = setTokenCookie(chai.request(app).get('/models'));
 
@@ -53,7 +58,7 @@ describe('/models', () => {
       expect(dataSource.model.findByUser.calledWith(authUserId)).to.equal(true, 'invalid method call');
     });
 
-    it('return code 401 in case of invalid token', async () => {
+    it('return code 401 in case of invalid auth token', async () => {
       const request = setCookie(chai.request(app).get('/models'), 'token', 'INVALID TOKEN');
 
       const response = await request;
@@ -61,7 +66,7 @@ describe('/models', () => {
       expect(response).to.have.status(401);
     });
 
-    it('return code 401 in case of no token in cookies', async () => {
+    it('return code 401 in case of no auth token in cookies', async () => {
       const request = chai.request(app).get('/models');
 
       const response = await request;
@@ -87,7 +92,12 @@ describe('/models', () => {
       app = initApp(dataSource);
     });
 
-    it('return code 401 in case of invalid token', async () => {
+    afterEach(() => {
+      dataSource.model.addForUser.resetHistory();
+    });
+
+
+    it('return code 401 in case of invalid auth token', async () => {
       const request = setCookie(chai.request(app).post('/models'), 'token', 'INVALID TOKEN');
 
       const response = await request;
@@ -108,11 +118,12 @@ describe('/models', () => {
     });
   });
 
-  describe.only('/PUT - update model', () => {
+  describe('/PUT - update model', () => {
     let app;
     let dataSource;
     const modelId = 'modelId1';
     const nonExistingModelId = 'modelId2';
+    const invalidModelId = 'invalidid3';
     const updateProperties = {
       descripton: 'UPDATED DESCRIPTION',
     };
@@ -125,10 +136,16 @@ describe('/models', () => {
         },
       };
       dataSource.model.checkOwner.withArgs(authUserId, modelId).resolves(true);
+      dataSource.model.checkOwner.withArgs(authUserId, invalidModelId).rejects();
       app = initApp(dataSource);
     });
 
-    it('return code 200, null in response body. Database `update` method is called', async () => {
+    afterEach(() => {
+      dataSource.model.checkOwner.resetHistory();
+      dataSource.model.update.resetHistory();
+    });
+
+    it('return code 200, {result:true} in response body. Database `update` method is called', async () => {
       const request = setTokenCookie(chai.request(app).put('/models').send({
         modelId, model: updateProperties,
       }));
@@ -136,8 +153,38 @@ describe('/models', () => {
       const response = await request;
 
       expect(response).to.have.status(200, 'invalid code');
-      expect(response.body.body).to.equal(null, 'invalid response body');
+      expect(response.body.body.result).to.equal(true, 'invalid response body');
       expect(dataSource.model.update.calledWith(updateProperties, modelId)).to.equal(true, 'invalid method call');
+    });
+
+    it('return code 403 if user is not an owner of modelId, body contains error. Database `update` method not called', async () => {
+      const request = setTokenCookie(chai.request(app).put('/models').send({
+        modelId: nonExistingModelId, model: updateProperties,
+      }));
+
+      const response = await request;
+
+      expect(response).to.have.status(403, 'invalid code');
+      expect(response.body.error).to.be.a('string', 'invalid response').and.not.empty;
+      expect(dataSource.model.update.called).to.equal(false, 'invalid method call');
+    });
+
+    it('return code 400 if invalid model id specified (checkOwner throws)', async () => {
+      const request = setTokenCookie(chai.request(app).put('/models').send({
+        modelId: invalidModelId, model: updateProperties,
+      }));
+
+      const response = await request;
+      expect(response).to.have.status(400, 'invalid code');
+      expect(response.body.error).to.be.a('string', 'invalid response').and.not.empty;
+    });
+
+    it('return code 401 in case of invalid auth token', async () => {
+      const request = setCookie(chai.request(app).put('/models'), 'token', 'INVALID TOKEN');
+
+      const response = await request;
+
+      expect(response).to.have.status(401);
     });
   });
 });
