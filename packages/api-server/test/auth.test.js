@@ -6,13 +6,13 @@ const sinon = require('sinon');
 const passport = require('passport');
 const MockStrategy = require('passport-mock-strategy');
 const initPassport = require('../auth/passport');
-const {createToken, verifyToken} = require('../auth/token');
+const { createToken, verifyToken } = require('../auth/token');
 const initApp = require('../app');
-const {extractCookie} = require('./utils');
+const { extractCookie } = require('./utils');
 
 chai.use(require('chai-http'));
 
-const {expect} = chai;
+const { expect } = chai;
 
 
 describe('/auth/google', () => {
@@ -26,11 +26,11 @@ describe('/auth/google', () => {
     displayName: userName,
   };
 
-  let mockDataProvider;
+  let dataSource;
 
   before(() => {
     // mock database
-    mockDataProvider = {
+    dataSource = {
       user: {
         upsertGoogleUser: sinon.stub().resolves({
           id: mockedMongoId,
@@ -38,8 +38,8 @@ describe('/auth/google', () => {
         }),
       },
     };
-    app = initApp(mockDataProvider);
-    initPassport(mockDataProvider);
+    app = initApp(dataSource);
+    initPassport(dataSource);
   });
 
   after(() => {
@@ -58,10 +58,10 @@ describe('/auth/google', () => {
     });
 
     it('upsertGoogleUser function should have been called', () => {
-      expect(mockDataProvider.user.upsertGoogleUser.calledOnce).to.equal(true);
+      expect(dataSource.user.upsertGoogleUser.calledOnce).to.equal(true);
     });
 
-    it('should save JWT token in cookies.token with userId and return displayName in response bdy ', async () => {
+    it('should save JWT token in cookies.token', async () => {
       expect(response).to.have.cookie('token');
     });
 
