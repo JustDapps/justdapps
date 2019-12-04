@@ -15,7 +15,7 @@ const secret = process.env.TOKEN_PRIVATE_KEY;
 /**
  * Creates JWT containing `userId` signed with app secret,
  * @param {*} user user object containing `id` property
- * Returns signed JWT with `userId` property
+ * @return signed JWT with `userId` property
  */
 const createToken = (user) => jwt.sign(
   {

@@ -1,10 +1,10 @@
-const {createToken, verifyToken} = require('../auth/token');
+const { createToken, verifyToken } = require('../auth/token');
 
 /**
  * This middleware reads cookies and populates the request `user` object with its `id`
  */
 const requireAuth = (req, res, next) => {
-  const {token} = req.cookies;
+  const { token } = req.cookies;
   if (!token) {
     res.status(401).send('Unauthorized: No token provided');
   } else {
@@ -12,7 +12,7 @@ const requireAuth = (req, res, next) => {
       if (err) {
         res.status(401).send('Unauthorized: Invalid token');
       } else {
-        req.user = {id: decoded.userId};
+        req.user = { id: decoded.userId };
         next();
       }
     });
@@ -26,7 +26,7 @@ const requireAuth = (req, res, next) => {
 const generateToken = (req, res, next) => {
   req.token = createToken(req.user);
   return res
-    .cookie('token', req.token, {httpOnly: true})
+    .cookie('token', req.token, { httpOnly: true })
     .status(200)
     .json(req.user);
 };

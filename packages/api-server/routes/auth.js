@@ -1,7 +1,7 @@
 const express = require('express');
 const passport = require('passport');
-const {generateToken} = require('../middlewares/auth');
-const {responseError} = require('../utils');
+const { generateToken } = require('../middlewares/auth');
+const { responseError } = require('../utils');
 
 const router = express.Router();
 
@@ -24,7 +24,8 @@ const authPassport = (req, res, next) => {
 
 /**
  * Saves req.user to database
- * req.user is an object with `googleId`, `displayName` properties
+ * req.user is an object with `googleId`, `displayName` properties.
+ * Then replaces req.user object with {id:databaseId, displayName}
  */
 const saveUser = (req, res, next) => {
   if (!req.user) {

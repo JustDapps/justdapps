@@ -1,14 +1,14 @@
-const {responseBody, responseError} = require('../utils');
+const { responseBody, responseError } = require('../utils');
 
 
 module.exports.find = function find(req, res) {
-  req.dataSource.model.findByUser(req.user.id).then((models) => res.json(responseBody(models)));
+  req.dataSource.model.findByUser(req.user.id).then((models) => res.json(responseBody({ models })));
 };
 
 
 module.exports.create = function create(req, res) {
   req.dataSource.model.addForUser(req.body.model)
-    .then((modelId) => res.json(responseBody({modelId})));
+    .then((modelId) => res.json(responseBody({ modelId })));
 };
 
 
