@@ -20,6 +20,8 @@ const nonAuthUserId = 'id2';
 describe('/models', () => {
   let token;
 
+  const setTokenCookie = (req) => setCookie(req, 'token', token);
+
   before(() => {
     token = createToken({
       id: authUserId,
@@ -42,7 +44,7 @@ describe('/models', () => {
     });
 
     it('return code 200, and list of 2 models in response body. Database `findByUser` called with authenticated user id', async () => {
-      const request = setCookie(chai.request(app).get('/models'), 'token', token);
+      const request = setTokenCookie(chai.request(app).get('/models'));
 
       const response = await request;
 
@@ -94,10 +96,8 @@ describe('/models', () => {
     });
 
     it('return code 200 and new model id in response body, Database `addForUser` methods called with correct parameters', async () => {
-      const request = setCookie(
+      const request = setTokenCookie(
         chai.request(app).post('/models').send({ model: newModel }),
-        'token',
-        token,
       );
 
       const response = await request;
@@ -105,6 +105,39 @@ describe('/models', () => {
       expect(response).to.have.status(200, 'invalid status');
       expect(response.body.body.modelId).to.equal(newModelId, 'invalid response');
       expect(dataSource.model.addForUser.calledWithMatch({ name: newModel.name }, authUserId)).to.equal(true, 'invalid method call');
+    });
+  });
+
+  describe.only('/PUT - update model', () => {
+    let app;
+    let dataSource;
+    const modelId = 'modelId1';
+    const nonExistingModelId = 'modelId2';
+    const updateProperties = {
+      descripton: 'UPDATED DESCRIPTION',
+    };
+
+    before(() => {
+      dataSource = {
+        model: {
+          checkOwner: sinon.stub().resolves(false),
+          update: sinon.stub().resolves(true),
+        },
+      };
+      dataSource.model.checkOwner.withArgs(authUserId, modelId).resolves(true);
+      app = initApp(dataSource);
+    });
+
+    it('return code 200, null in response body. Database `update` method is called', async () => {
+      const request = setTokenCookie(chai.request(app).put('/models').send({
+        modelId, model: updateProperties,
+      }));
+
+      const response = await request;
+
+      expect(response).to.have.status(200, 'invalid code');
+      expect(response.body.body).to.equal(null, 'invalid response body');
+      expect(dataSource.model.update.calledWith(updateProperties, modelId)).to.equal(true, 'invalid method call');
     });
   });
 });
