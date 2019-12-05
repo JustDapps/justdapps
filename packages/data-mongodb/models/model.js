@@ -73,11 +73,13 @@ modelSchema.statics.addForUser = function addForUser(modelProperties, userId) {
     .then((result) => result._id.toString());
 };
 
+/** Deletes specific model and returns true. If model id doesn't exist, returns false. */
 modelSchema.statics.delete = function deleteById(id) {
-  return this.findByIdAndDelete(id).exec().then(() => true);
+  return this.findByIdAndDelete(id).exec().then((response) => !!response);
 };
 
-/** Changes model with specified identifier.
+/** Changes model with specified identifier and returns true.
+ * If model id doesn't exist, returns false.
  * Properties to be changed are specified as 1st parameter */
 modelSchema.statics.update = function update(modelProperties, id) {
   return this.findByIdAndUpdate(

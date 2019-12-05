@@ -116,13 +116,14 @@ describe('db.model', () => {
       expect(result).to.equal(true);
     });
 
-    it('should change nothing if model id does not exist', async () => {
+    it('should change nothing if model id does not exist, return false', async () => {
       const { length: beforeCount } = await Model.find({});
 
-      await db.model.delete(userIds.user1);
+      const result = await db.model.delete(userIds.user1);
 
       const { length: afterCount } = await Model.find({});
       expect(beforeCount).to.equal(afterCount);
+      expect(result).to.equal(false);
     });
 
     it('should throw error if invalid id provided', async () => expect(db.model.delete('012345')).to.eventually.be.rejected);
