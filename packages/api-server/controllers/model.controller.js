@@ -30,7 +30,8 @@ module.exports.delete = function deleteModel(req, res) {
   req.dataSource.model.checkOwner(req.user.id, req.body.modelId)
     .then((isOwner) => (isOwner
       ? req.dataSource.model.delete(req.body.modelId)
-        .then(() => res.json(responseBody(null)))
+        .then((result) => res.json(responseBody({ result })))
       : res.status(403).json(responseError('Attempt to delete model of another user'))
-    ));
+    ))
+    .catch((err) => res.status(400).json(responseError('Invalid input')));
 };
