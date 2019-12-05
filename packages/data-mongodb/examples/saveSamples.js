@@ -1,9 +1,9 @@
 require('dotenv').config();
 
 const mongoose = require('mongoose');
-const {users, models} = require('./sampleData.js');
-const {User, Model} = require('../models');
-const {cleanupAndSave} = require('../utils');
+const { users, models } = require('./sampleData.js');
+const { User, Model } = require('../models');
+const { cleanupAndSave } = require('../utils');
 
 const selectAndPopulate = () => Model
   .find({})
@@ -20,7 +20,7 @@ const testMethods = () => Model
 // connect, execute specified handler and disconnect
 const main = (handler) => mongoose.connect(
   process.env.TEST_DB_PATH,
-  {useNewUrlParser: true, useUnifiedTopology: true},
+  { useNewUrlParser: true, useUnifiedTopology: true },
 ).then(
   () => handler().then(() => {
     console.log('DONE');
@@ -30,5 +30,5 @@ const main = (handler) => mongoose.connect(
 );
 
 // entry point
-// main(() => cleanupAndSave(users, models));
-main(() => testMethods());
+main(() => cleanupAndSave(users, models));
+// main(() => testMethods());
