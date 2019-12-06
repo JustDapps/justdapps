@@ -2,5 +2,11 @@
   "name": "@justdapps/eth-core",
   "version": "0.1.0",
   "main": "index.js",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "web3": "^1.2.4"
+  }
 }
