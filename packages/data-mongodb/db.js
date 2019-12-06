@@ -1,24 +1,38 @@
 const mongoose = require('mongoose');
-const {User, Model} = require('./models');
+const { User, Model } = require('./models');
 
 module.exports = {
-  connect: (path) => mongoose.connect(
-    path,
-    {useNewUrlParser: true, useUnifiedTopology: true},
-  ),
+  connect(path) {
+    return mongoose.connect(
+      path,
+      { useNewUrlParser: true, useUnifiedTopology: true },
+    );
+  },
 
-  disconnect: () => mongoose.disconnect(),
+  disconnect() { return mongoose.disconnect(); },
 
   user: {
-    upsertGoogleUser: (id, displayName, cb) => User
-      .upsertGoogleUser(id, displayName, cb),
+    upsertGoogleUser(id, displayName, cb) {
+      return User
+        .upsertGoogleUser(id, displayName, cb);
+    },
   },
 
   model: {
-    checkOwner: (userId, modelId) => Model.checkOwner(userId, modelId),
-    findByUser: (userId) => Model.findByUser(userId),
-    addForUser: (modelProperties, userId) => Model.addForUser(modelProperties, userId),
-    delete: (id) => Model.delete(id),
-    update: (modelProperties, id) => Model.update(modelProperties, id),
+    checkOwner(userId, modelId) {
+      return Model.checkOwner(userId, modelId);
+    },
+    findByUser(userId) {
+      return Model.findByUser(userId);
+    },
+    addForUser(modelProperties, userId) {
+      return Model.addForUser(modelProperties, userId);
+    },
+    delete(id) {
+      return Model.delete(id);
+    },
+    update(modelProperties, id) {
+      return Model.update(modelProperties, id);
+    },
   },
 };
