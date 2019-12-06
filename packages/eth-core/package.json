@@ -4,7 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "devnode": "ganache-cli -m occur chimney draft toddler glue typical priority indicate kick manage civil blame"
   },
   "dependencies": {
     "web3": "^1.2.4"
