@@ -8,9 +8,11 @@
 const fs = require('fs');
 const chai = require('chai');
 const Eth = require('../src/eth');
-chai.use(require('chai-http'));
 
-const expect = { chai };
+chai.use(require('chai-http'));
+chai.use(require('chai-as-promised'));
+
+const { expect } = chai;
 const networkId = 999;
 
 let testData;
@@ -19,7 +21,7 @@ let managerContract;
 
 const loadTestData = () => {
   testData = JSON.parse(
-    fs.readFileSync('test/migrations.json'),
+    fs.readFileSync('test/migrations.log'),
   );
   storageContract = testData.contracts.storage;
   managerContract = testData.contracts.manager;
@@ -41,10 +43,10 @@ describe('eth', () => {
   });
 
   describe('call', () => {
-    it.only('return single value: string', async () => {
+    it('return single value: string', async () => {
       const abi = getMethodAbi(storageContract, 'stringData');
 
-      const result = await eth.call(storageContract, abi, networkId, 'stringData', []);
+      const result = await eth.call(storageContract.address, abi, networkId, 'stringData', []);
 
       expect(result).to.equal('Initial');
     });
@@ -57,22 +59,38 @@ describe('eth', () => {
       expect(result).to.equal('5');
     });
 
-    it('return single value: address', () => {
+    it.only('return single value: address', async () => {
+      const abi = getMethodAbi(storageContract, 'owner');
+
+      const result = await eth.call(storageContract.address, abi, networkId, 'owner', []);
+      console.log(abi);
+      expect(result).to.equal(testData.params.owner);
     });
 
     it('return multiple values', async () => {
-      const abi = getMethodAbi(storageContract, 'uintData');
+      const result = await eth.call(
+        storageContract.address,
+        storageContract.abi,
+        networkId,
+        'getSomeValues',
+        [testData.params.owner],
+      );
 
-      const result = await eth.call(storageContract.address, abi, networkId, 'uintData', []);
-
-      expect(result).to.be.an('array');
+      expect(result).to.be.an('array').with.lengthOf(3).and.equal([
+        testData.params.owner,
+        false,
+        'Initial',
+      ]);
     });
 
     it('throw in case of ABI error (contract doesn`t have such method)', () => {
+      expect(eth.call(storageContract.address, [], networkId, 'uintData', []))
+        .to.eventually.throw('No method');
     });
 
     it('throw in case of revert during call', () => {
-
+      expect(eth.call(storageContract.address, storageContract.abi, networkId, 'getAlwaysRevert', []))
+        .to.eventually.throw('Call reverts');
     });
   });
 });
