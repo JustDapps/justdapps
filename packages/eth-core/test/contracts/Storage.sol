@@ -19,7 +19,6 @@ contract Storage is Manageable, IWallet {
 
     //
     // Storage data
-    address public owner;
     mapping(address => uint256) public mapData;
     string public stringData;
     uint256 public uintData;
