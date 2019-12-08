@@ -17,4 +17,9 @@ const Eth = function Eth(nodeProvider) {
 
 Eth.NodeProvider = NodeProvider;
 
+Eth.prototype.call = function call() {
+  throw ('NOT IMPLEMENTED YET');
+};
+
+
 module.exports = Eth;
