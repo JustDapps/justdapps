@@ -24,7 +24,7 @@ module.exports = function (deployer, network, accounts) {
     .then(() => storage.setManager(accounts[1], true))
     .then(() => {
       fs.writeFileSync(
-        './migrations.json',
+        './migrations.log',
         JSON.stringify({
           params: {
             initialData,
