@@ -43,9 +43,13 @@ contract Storage is Manageable, IWallet {
         to.transfer(address(this).balance);
     }
 
-
     function getSomeValues(address key) public view returns (uint256, bool, string memory) {
         return (mapData[key], boolData, stringData);
+    }
+
+    function getAlwaysRevert() public pure returns (bool) {
+        require(false, 'always revert');
+        return true;
     }
 
     function setMapData(address key, uint256 value) public {
@@ -55,7 +59,7 @@ contract Storage is Manageable, IWallet {
 
     function setMapDataArray(address[] memory keys, uint256[] memory values) public {
         for(uint256 i = 0; i < values.length; ++i) {
-            mapData[keys[i]] = values[i]; 
+            mapData[keys[i]] = values[i];
         }
         emit MapDataSetArray(msg.sender, keys, values);
     }
@@ -68,7 +72,7 @@ contract Storage is Manageable, IWallet {
     function setUintData(uint256 value) public {
         uintData = value;
         emit UintDataSet(msg.sender, value);
-    }    
+    }
 
     function setBoolData(bool value) public ownerOnly {
         boolData = value;
