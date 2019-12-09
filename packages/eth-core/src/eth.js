@@ -3,7 +3,9 @@
  * Requires node endpoints information to be passed in a constructor
  */
 
+const EthError = require('./ethError');
 const NodeProvider = require('./nodeProvider');
+
 
 /** Creates Ethereum bridge. Accepts NodeProvider as a construction parameter.
  * See {@link NodeProvider} for more information.
@@ -30,9 +32,30 @@ Eth.NodeProvider = NodeProvider;
  * @returns {*} single or multiple resulting values of a call
  * @throws Exception is thrown if contract reverts or no method exists, or any other error occurs
  */
-Eth.prototype.call = function call(address, abi, networkId, method, args = [], options = {}) {
+Eth.prototype.call = async function call(
+  address, abi, networkId, method, args = [], options = {},
+) {
   const contract = this.createContract(address, abi, networkId);
-  return contract.methods[method](...args).call(options);
+  if (contract.methods[method]) {
+    try {
+      return await contract.methods[method](...args).call(options);
+    } catch (err) {
+      throw new EthError(err.message);
+    }
+  }
+  throw new EthError('No method in ABI');
+};
+
+Eth.prototype.createUnsignedTx = function createUnsignedTx(
+  address, abi, networkId, method, args = [], options = {},
+) {
+  throw new EthError('Method not implemented');
+};
+
+Eth.prototype.sendSignedTx = function sendSignedTx(
+  signedTx, networkId,
+) {
+  throw new EthError('Method not implemented');
 };
 
 
