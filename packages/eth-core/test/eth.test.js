@@ -8,6 +8,7 @@
 const fs = require('fs');
 const chai = require('chai');
 const Eth = require('../src/eth');
+const EthError = require('../src/ethError');
 
 chai.use(require('chai-http'));
 chai.use(require('chai-as-promised'));
@@ -48,7 +49,7 @@ describe('eth', () => {
 
       const result = await eth.call(storageContract.address, abi, networkId, 'stringData', []);
 
-      expect(result).to.equal('Initial');
+      return expect(result).to.equal('Initial');
     });
 
     it('return single value: number', async () => {
@@ -56,15 +57,15 @@ describe('eth', () => {
 
       const result = await eth.call(storageContract.address, abi, networkId, 'uintData', []);
 
-      expect(result).to.equal('5');
+      return expect(result).to.equal('5');
     });
 
-    it.only('return single value: address', async () => {
+    it('return single value: address', async () => {
       const abi = getMethodAbi(storageContract, 'owner');
 
       const result = await eth.call(storageContract.address, abi, networkId, 'owner', []);
-      console.log(abi);
-      expect(result).to.equal(testData.params.owner);
+
+      return expect(result).to.equal(testData.params.owner);
     });
 
     it('return multiple values', async () => {
@@ -76,21 +77,39 @@ describe('eth', () => {
         [testData.params.owner],
       );
 
-      expect(result).to.be.an('array').with.lengthOf(3).and.equal([
-        testData.params.owner,
-        false,
-        'Initial',
-      ]);
+      return expect(result).to.deep.equal({
+        0: '1',
+        1: false,
+        2: 'Initial',
+      });
     });
 
-    it('throw in case of ABI error (contract doesn`t have such method)', () => {
-      expect(eth.call(storageContract.address, [], networkId, 'uintData', []))
-        .to.eventually.throw('No method');
+    it('throw EthError `No method in ABI` in case of ABI error (no function in ABI)', async () => {
+      const request = eth.call(storageContract.address, [], networkId, 'uintData', []);
+
+      return expect(request).to.eventually.be.rejectedWith(EthError, 'No method in ABI');
     });
 
-    it('throw in case of revert during call', () => {
-      expect(eth.call(storageContract.address, storageContract.abi, networkId, 'getAlwaysRevert', []))
-        .to.eventually.throw('Call reverts');
+    it('throw EthError in case of invalid method (contract doesn`t have such method)', async () => {
+      const abi = getMethodAbi(storageContract, 'getSomeValues');
+
+      const request = eth.call(managerContract.address, abi, networkId, 'getSomeValues', [testData.params.owner]);
+
+      return expect(request).to.eventually.be.rejectedWith(EthError);
+    });
+
+    it('throw EthError in case of invalid parameters', async () => {
+      const abi = getMethodAbi(storageContract, 'getSomeValues');
+
+      const request = eth.call(storageContract.address, abi, networkId, 'getSomeValues', ['0x0']);
+
+      return expect(request).to.eventually.be.rejectedWith(EthError);
+    });
+
+    it('throw EthError in case of revert during call', async () => {
+      const request = eth.call(storageContract.address, storageContract.abi, networkId, 'getAlwaysRevert', []);
+      return expect(request)
+        .to.eventually.be.rejectedWith(EthError);
     });
   });
 });
