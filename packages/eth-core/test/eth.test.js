@@ -9,6 +9,7 @@ const fs = require('fs');
 const chai = require('chai');
 const Eth = require('../src/eth');
 const EthError = require('../src/ethError');
+const Utils = require('./truffleutils');
 
 chai.use(require('chai-http'));
 chai.use(require('chai-as-promised'));
@@ -19,6 +20,12 @@ const networkId = 999;
 let testData;
 let storageContract;
 let managerContract;
+
+// for manipulating ganache-cli
+const utils = new Utils({ networkId });
+
+// stores ganache-cli snapshot id
+let snapshot;
 
 const loadTestData = () => {
   testData = JSON.parse(
@@ -111,5 +118,21 @@ describe('eth', () => {
       return expect(request)
         .to.eventually.be.rejectedWith(EthError);
     });
+  });
+
+  describe('createUnsignedTx', () => {
+    it('all is good', async () => expect(1).to.equal(1));
+  });
+
+  describe.only('sendSignedTx', () => {
+    before(async () => {
+      snapshot = await utils.makeSnapshot();
+      // console.log(`Saved snapshot ${snapshot}`);
+    });
+
+    afterEach(async () => {
+      const result = await utils.revertTo(snapshot);
+    });
+    it('all is good', async () => expect(1).to.equal(1));
   });
 });
