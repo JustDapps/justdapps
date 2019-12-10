@@ -11,29 +11,17 @@ const Eth = require('../src/eth');
 const EthError = require('../src/ethError');
 const Utils = require('./truffleutils');
 
-chai.use(require('chai-http'));
 chai.use(require('chai-as-promised'));
+chai.use(require('chai-string'));
 
 const { expect } = chai;
 const networkId = 999;
-
-let testData;
-let storageContract;
-let managerContract;
 
 // for manipulating ganache-cli
 const utils = new Utils({ networkId });
 
 // stores ganache-cli snapshot id
 let snapshot;
-
-const loadTestData = () => {
-  testData = JSON.parse(
-    fs.readFileSync('test/migrations.log'),
-  );
-  storageContract = testData.contracts.storage;
-  managerContract = testData.contracts.manager;
-};
 
 /** Makes new abi array with a single item of `methodName` */
 const getMethodAbi = (contract, methodName) => [
@@ -42,9 +30,17 @@ const getMethodAbi = (contract, methodName) => [
 
 describe('eth', () => {
   let eth;
+  let testData;
+  let storageContract;
+  let managerContract;
 
   before(() => {
-    loadTestData();
+    testData = JSON.parse(
+      fs.readFileSync('test/migrations.log'),
+    );
+    storageContract = testData.contracts.storage;
+    managerContract = testData.contracts.manager;
+
     eth = new Eth(new Eth.NodeProvider({
       [networkId.toString()]: 'http://localhost:8545',
     }));
@@ -121,17 +117,112 @@ describe('eth', () => {
   });
 
   describe('createUnsignedTx', () => {
-    it('all is good', async () => expect(1).to.equal(1));
+    let sender;
+    const param = 100;
+    const hexParam = '64';
+    let abi;
+    let paramAddress;
+    const gas = 10000;
+    const gasPrice = '100000000000';
+    const nonce = 9;
+    const value = 100000;
+    const methodName = 'setMapData';
+
+    before(() => {
+      abi = getMethodAbi(storageContract, methodName);
+      sender = testData.params.owner;
+      paramAddress = testData.params.admin;
+    });
+
+    describe('create transaction with all possible options provided', () => {
+      let result;
+      before(async () => {
+        result = await eth.createUnsignedTx(
+          storageContract.address,
+          abi,
+          networkId,
+          methodName,
+          [paramAddress, param],
+          {
+            from: sender, gas, gasPrice, nonce, value,
+          },
+        );
+      });
+
+      it('`data` should start with the method signature and end with a parameter',
+        () => expect(result.data).to.startWith(abi[0].signature).and.endWith(hexParam));
+
+      it('`from` should be equal to options.from', () => expect(result.from).to.be.equal(sender));
+      it('`to` should be equal to contract address', () => expect(result.to).to.be.equal(storageContract.address));
+      it('`nonce` should be equal to options.nonce', () => expect(result.nonce).to.be.equal(nonce));
+      it('`gas` should be equal to options.gas', () => expect(result.gas).to.be.equal(gas));
+      it('`gasPrice` should be equal to options.gasPrice', () => expect(result.gasPrice).to.be.equal(gasPrice));
+      it('`value` should be equal to options.value', () => expect(result.value).to.be.equal(value));
+    });
+
+    describe('create transaction when some of options are missing', () => {
+      let result;
+      before(async () => {
+        result = await eth.createUnsignedTx(
+          storageContract.address,
+          abi,
+          networkId,
+          methodName,
+          [paramAddress, param],
+          {
+            from: sender,
+          },
+        );
+      });
+
+      it('`data` should still start with the method signature and end with a parameter',
+        () => expect(result.data).to.startWith(abi[0].signature).and.endWith(hexParam));
+
+      it('nonce is calculated as number if not set', () => expect(result.nonce).to.be.a('number'));
+
+      it('value is set to 0 if not set', () => expect(result.value).to.equal(0));
+
+      it('gas is calculated as number if not set', () => expect(result.gas).to.be.a('number'));
+
+      it('gasPrice is calculated as string if not set', () => expect(result.gasPrice).to.be.a('string').and.not.empty);
+    });
+
+    describe('errors', () => {
+      it('estimated gas of reverted method should equal to 0', async () => {
+        const result = await eth.createUnsignedTx(
+          storageContract.address,
+          storageContract.abi,
+          networkId,
+          'setBoolData',
+          [true],
+          { from: testData.params.admin },
+        );
+        return expect(result.gas).to.equal(0);
+      });
+
+      it('missing options: from, expect throw `No sender address specified`', () => {
+        const request = eth.createUnsignedTx(
+          storageContract.address,
+          storageContract.abi,
+          networkId,
+          'setBoolData',
+          [true],
+          {},
+        );
+
+        return expect(request).to.eventually.be.rejectedWith(EthError, 'No sender address specified');
+      });
+    });
   });
 
-  describe.only('sendSignedTx', () => {
+  describe('sendSignedTx', () => {
     before(async () => {
       snapshot = await utils.makeSnapshot();
       // console.log(`Saved snapshot ${snapshot}`);
     });
 
     afterEach(async () => {
-      const result = await utils.revertTo(snapshot);
+      await utils.revertTo(snapshot);
     });
     it('all is good', async () => expect(1).to.equal(1));
   });
