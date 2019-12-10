@@ -6,7 +6,7 @@ const request = require('superagent');
 const Utils = function Utils({ networkId, node } = {}) {
   this.networkId = networkId || '999';
   this.node = node || 'http://localhost:8545';
-  console.log(this.networkId, this.node);
+  console.log(`Utils created for ${this.networkId} id ${this.node}`);
 };
 
 Utils.prototype.makeSnapshot = function reset() {
