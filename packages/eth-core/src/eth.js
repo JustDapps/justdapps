@@ -32,7 +32,7 @@ Eth.NodeProvider = NodeProvider;
  * @returns {Promise} Promise that resolves to a resulting value of a call, see web3.eth.Contract.myMethod.call
  * @throws Exception is thrown if contract reverts or no method exists, or any other error occurs
  */
-Eth.prototype.call = async function call(
+Eth.prototype.callContract = async function call(
   address, abi, networkId, method, args = [], options = {},
 ) {
   const contract = this.createContract(address, abi, networkId);
@@ -92,11 +92,75 @@ Eth.prototype.createUnsignedTx = async function createUnsignedTx(
   };
 };
 
+/**
+ * Sends signed transaction to the blockchain
+ * @param {string} signedTx signed transaction in HEX format, string starting with '0x'
+ * @returns {Promise} Promise that resolves to transaction hash that is available immediately
+ */
 Eth.prototype.sendSignedTx = function sendSignedTx(
   signedTx, networkId,
 ) {
-  throw new EthError('Method not implemented');
+  return new Promise((resolve, reject) => {
+    this.nodeProvider.web3For(networkId).eth.sendSignedTransaction(
+      signedTx,
+      (err, hash) => {
+        console.log(`Got error ${err}`);
+        console.log(`Got hash ${hash}`);
+        resolve(hash);
+      },
+    );
+    // this.nodeProvider.web3For(networkId).eth.sendSignedTransaction(signedTx)
+    //   .once('transactionHash', (hash) => {
+    //     console.log(`Hash ${hash}`);
+    //     resolve(hash);
+    //   })
+    //   .on('receipt', (receipt) => {
+    //     console.log(`Got receipt ${JSON.stringify(receipt)}`);
+    //     resolve(receipt.transactionHash);
+    //   })
+    //   .on('error', (err, receipt) => {
+    //     console.log(`Error ${err}`);
+    //     console.log(`Receipt ${receipt}`);
+    //     resolve(receipt.transactionHash);
+    //   });
+    // .catch((e) => {
+    //   console.log(`Got error ${e.message}`);
+    //   reject(e);
+    // });
+    // .then((receipt) => {
+    //   console.log(`Got receipt ${receipt.transactionHash}`);
+    //   resolve(receipt.transactionHash);
+    // })
+    // .catch((e) => {
+    //   console.log(`Got error ${e.message}`);
+    //   reject(e);
+    // });
+    // .on('transactionHash', (hash) => {
+    //   console.log(`Hash ${hash}`);
+    //   resolve(hash);
+    // })
+    // .on('error', (err) => {
+    //   console.log(`Error ${err}`);
+    //   reject(err);
+    // })
+    // .on('receipt', (receipt) => {
+    //   console.log(`Got receipt ${JSON.stringify(receipt)}`);
+    //   resolve(receipt.transactionHash);
+    // })
+    // .on('confirmation', (confirmationNumber, receipt) => {
+    //   console.log(`Got confirmation ${confirmationNumber}, receipt ${receipt.transactionHash}`);
+    //   resolve(receipt.transactionHash);
+    // });
+  });
 };
+// this.nodeProvider.web3For(networkId).eth.sendSignedTransaction(
+//   signedTx,
+//   (err, hash) => {
+//     console.log(`Got error ${err}`);
+//     console.log(`Got hash ${hash}`);
+//     resolve(hash);
+//   },
+// );
 
 
 /**
@@ -113,6 +177,9 @@ Eth.prototype.createContract = function createContract(address, abi, networkId) 
   return new web3.eth.Contract(abi, address);
 };
 
+/**
+ * web3's estimateGas wrapper. returns 0 in case of contract method revert
+ */
 Eth.prototype.estimateGas = async function estimateGas(contractMethod, options) {
   try {
     return await contractMethod.estimateGas(options);

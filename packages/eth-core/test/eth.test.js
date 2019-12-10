@@ -34,7 +34,9 @@ describe('eth', () => {
   let storageContract;
   let managerContract;
 
-  before(() => {
+  before(async () => {
+    snapshot = await utils.makeSnapshot();
+
     testData = JSON.parse(
       fs.readFileSync('test/migrations.log'),
     );
@@ -50,7 +52,7 @@ describe('eth', () => {
     it('return single value: string', async () => {
       const abi = getMethodAbi(storageContract, 'stringData');
 
-      const result = await eth.call(storageContract.address, abi, networkId, 'stringData', []);
+      const result = await eth.callContract(storageContract.address, abi, networkId, 'stringData', []);
 
       return expect(result).to.equal('Initial');
     });
@@ -58,7 +60,7 @@ describe('eth', () => {
     it('return single value: number', async () => {
       const abi = getMethodAbi(storageContract, 'uintData');
 
-      const result = await eth.call(storageContract.address, abi, networkId, 'uintData', []);
+      const result = await eth.callContract(storageContract.address, abi, networkId, 'uintData', []);
 
       return expect(result).to.equal('5');
     });
@@ -66,13 +68,13 @@ describe('eth', () => {
     it('return single value: address', async () => {
       const abi = getMethodAbi(storageContract, 'owner');
 
-      const result = await eth.call(storageContract.address, abi, networkId, 'owner', []);
+      const result = await eth.callContract(storageContract.address, abi, networkId, 'owner', []);
 
       return expect(result).to.equal(testData.params.owner);
     });
 
     it('return multiple values', async () => {
-      const result = await eth.call(
+      const result = await eth.callContract(
         storageContract.address,
         storageContract.abi,
         networkId,
@@ -88,7 +90,7 @@ describe('eth', () => {
     });
 
     it('throw EthError `No method in ABI` in case of ABI error (no function in ABI)', async () => {
-      const request = eth.call(storageContract.address, [], networkId, 'uintData', []);
+      const request = eth.callContract(storageContract.address, [], networkId, 'uintData', []);
 
       return expect(request).to.eventually.be.rejectedWith(EthError, 'No method in ABI');
     });
@@ -96,7 +98,7 @@ describe('eth', () => {
     it('throw EthError in case of invalid method (contract doesn`t have such method)', async () => {
       const abi = getMethodAbi(storageContract, 'getSomeValues');
 
-      const request = eth.call(managerContract.address, abi, networkId, 'getSomeValues', [testData.params.owner]);
+      const request = eth.callContract(managerContract.address, abi, networkId, 'getSomeValues', [testData.params.owner]);
 
       return expect(request).to.eventually.be.rejectedWith(EthError);
     });
@@ -104,13 +106,13 @@ describe('eth', () => {
     it('throw EthError in case of invalid parameters', async () => {
       const abi = getMethodAbi(storageContract, 'getSomeValues');
 
-      const request = eth.call(storageContract.address, abi, networkId, 'getSomeValues', ['0x0']);
+      const request = eth.callContract(storageContract.address, abi, networkId, 'getSomeValues', ['0x0']);
 
       return expect(request).to.eventually.be.rejectedWith(EthError);
     });
 
     it('throw EthError in case of revert during call', async () => {
-      const request = eth.call(storageContract.address, storageContract.abi, networkId, 'getAlwaysRevert', []);
+      const request = eth.callContract(storageContract.address, storageContract.abi, networkId, 'getAlwaysRevert', []);
       return expect(request)
         .to.eventually.be.rejectedWith(EthError);
     });
@@ -215,15 +217,57 @@ describe('eth', () => {
     });
   });
 
-  describe('sendSignedTx', () => {
+  describe.only('sendSignedTx', () => {
+    let web3;
+    const ownerPrivateKey = '0x5aeeaa1762e08e2de4ad467a4344c5942259eeb24031e356cdef26268099542f';
+    const adminPrivateKey = '0x4e25652bfc657f12de0f968fdd798f862a5fe58d7ef347da37d715aa868a2202';
+
     before(async () => {
-      snapshot = await utils.makeSnapshot();
-      // console.log(`Saved snapshot ${snapshot}`);
+      web3 = eth.nodeProvider.web3For(networkId);
     });
 
     afterEach(async () => {
       await utils.revertTo(snapshot);
     });
-    it('all is good', async () => expect(1).to.equal(1));
+
+    it('should return transactionHash immediately after transaction is sent', async () => {
+      // create transferOwnership(admin) transaction
+      const tx = await eth.createUnsignedTx(
+        storageContract.address,
+        storageContract.abi,
+        networkId,
+        'transferOwnership',
+        [testData.params.admin],
+        {
+          gas: 100000,
+          from: testData.params.owner,
+        },
+      );
+      const signedTx = await web3.eth.accounts.signTransaction(tx, ownerPrivateKey);
+
+      const result = await eth.sendSignedTx(signedTx.rawTransaction, networkId);
+      return expect(result).to.be.a('string').with.lengthOf(66).and.startWith('0x');
+    });
+
+    it.only('should return transactionHash even in case of failed transaction', async () => {
+      // create transferOwnership(admin, {from:admin}) transaction
+      const tx = await eth.createUnsignedTx(
+        storageContract.address,
+        storageContract.abi,
+        networkId,
+        'transferOwnership',
+        [testData.params.admin],
+        {
+          gas: 100000,
+          from: testData.params.admin,
+        },
+      );
+      console.log(tx);
+      const signedTx = await web3.eth.accounts.signTransaction(tx, adminPrivateKey);
+
+      const result = await eth.sendSignedTx(signedTx.rawTransaction, networkId);
+      console.log(result);
+      return expect(result).to.be.a('string').with.lengthOf(66).and.startWith('0x');
+    });
   });
 });
