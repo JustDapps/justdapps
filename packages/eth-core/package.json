@@ -5,9 +5,10 @@
   "license": "MIT",
   "scripts": {
     "test": "mocha",
-    "devnode": "ganache-cli -i 999 -b 1 -m occur chimney draft toddler glue typical priority indicate kick manage civil blame"
+    "devnode": "ganache-cli -i 999 -m occur chimney draft toddler glue typical priority indicate kick manage civil blame"
   },
   "dependencies": {
+    "superagent": "^5.1.2",
     "web3": "^1.2.4"
   }
 }
