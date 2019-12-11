@@ -76,7 +76,7 @@ Eth.prototype.createUnsignedTx = async function createUnsignedTx(
   const data = contractMethod.encodeABI();
 
   const nonce = options.nonce
-    || (await web3.eth.getTransactionCount(options.from));
+    || (await web3.eth.getTransactionCount(options.from, 'pending'));
   const gasPrice = options.gasPrice
     || (await web3.eth.getGasPrice());
 
@@ -108,8 +108,15 @@ Eth.prototype.sendSignedTx = function sendSignedTx(
       params: [signedTx],
       id: '1',
     })
-    .then((res) => res.body.result)
-    .catch((err) => Promise.reject(err));
+    .then(({ body }) => {
+      if (body.result) {
+        return body.result;
+      } if (body.error) {
+        throw new EthError(body.error.message);
+      } else {
+        throw new EthError('Unknown result');
+      }
+    });
 };
 
 
