@@ -217,7 +217,7 @@ describe('eth', () => {
     });
   });
 
-  describe.only('sendSignedTx', () => {
+  describe('sendSignedTx', () => {
     let web3;
     const ownerPrivateKey = '0x5aeeaa1762e08e2de4ad467a4344c5942259eeb24031e356cdef26268099542f';
     const adminPrivateKey = '0x4e25652bfc657f12de0f968fdd798f862a5fe58d7ef347da37d715aa868a2202';
@@ -246,10 +246,11 @@ describe('eth', () => {
       const signedTx = await web3.eth.accounts.signTransaction(tx, ownerPrivateKey);
 
       const result = await eth.sendSignedTx(signedTx.rawTransaction, networkId);
+
       return expect(result).to.be.a('string').with.lengthOf(66).and.startWith('0x');
     });
 
-    it.only('should return transactionHash even in case of failed transaction', async () => {
+    it('should return transactionHash even in case of failed transaction', async () => {
       // create transferOwnership(admin, {from:admin}) transaction
       const tx = await eth.createUnsignedTx(
         storageContract.address,
@@ -262,12 +263,51 @@ describe('eth', () => {
           from: testData.params.admin,
         },
       );
-      console.log(tx);
       const signedTx = await web3.eth.accounts.signTransaction(tx, adminPrivateKey);
 
       const result = await eth.sendSignedTx(signedTx.rawTransaction, networkId);
-      console.log(result);
+
       return expect(result).to.be.a('string').with.lengthOf(66).and.startWith('0x');
+    });
+
+    it('should throw EthError if nonce is incorrect', async () => {
+      const tx = await eth.createUnsignedTx(
+        storageContract.address,
+        storageContract.abi,
+        networkId,
+        'transferOwnership',
+        [testData.params.admin],
+        {
+          gas: 100000,
+          from: testData.params.owner,
+        },
+      );
+      tx.nonce -= 1;
+      const signedTx = await web3.eth.accounts.signTransaction(tx, ownerPrivateKey);
+
+      const request = eth.sendSignedTx(signedTx.rawTransaction, networkId);
+
+      return expect(request).to.be.eventually.rejectedWith(EthError);
+    });
+
+    it('should throw if sender doesnt have enough funds to send transaction', async () => {
+      const tx = await eth.createUnsignedTx(
+        storageContract.address,
+        storageContract.abi,
+        networkId,
+        'pay',
+        [50],
+        {
+          value: '1000000000000000000000',
+          gas: 100000,
+          from: testData.params.owner,
+        },
+      );
+      const signedTx = await web3.eth.accounts.signTransaction(tx, ownerPrivateKey);
+
+      const request = eth.sendSignedTx(signedTx.rawTransaction, networkId);
+
+      return expect(request).to.be.eventually.rejectedWith(EthError);
     });
   });
 });
