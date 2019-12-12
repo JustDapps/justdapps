@@ -11,5 +11,5 @@ script:
   - yarn test:data
   - yarn test:api
   - yarn preptest:eth &
-  - sleep 10
+  - sleep 15
   - yarn test:eth
