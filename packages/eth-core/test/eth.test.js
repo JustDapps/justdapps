@@ -3,6 +3,9 @@
 /**
  * Prior to running this test ganache-cli and migrations should be run.
  * See `contracts` and `migrations` folders for more information
+ *
+ * Run `yarn preptest:eth` inside the root folder
+ * or `yarn preptest` inside the package folder
  */
 
 const fs = require('fs');
