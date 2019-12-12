@@ -6,9 +6,10 @@ before_install:
   - yarn global add mocha truffle ganache-cli
 
 before_script:
-  - yarn preptest:eth
 
 script:
   - yarn test:data
   - yarn test:api
+  - yarn preptest:eth &
+  - sleep 10
   - yarn test:eth
