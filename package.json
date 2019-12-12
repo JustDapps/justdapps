@@ -6,7 +6,11 @@
     ],
     "scripts": {
         "devdb": "node .\\packages\\data-mongodb\\examples\\saveSamples.js",
-        "test": "yarn workspaces run test"
+        "test": "yarn workspaces run test",
+        "test:data": "cd packages\\data-mongodb && yarn test",
+        "test:api": "cd packages\\api-server && yarn test",
+        "preptest:eth": "cd packages\\eth-core && yarn preptest",
+        "test:eth": "cd packages\\eth-core && yarn test"
     },
     "devDependencies": {
         "chai": "^4.2.0",

@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha --timeout 10000"
   },
   "dependencies": {
     "mongoose": "^5.7.8"
