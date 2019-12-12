@@ -7,7 +7,7 @@
  * Run `yarn preptest:eth` inside the root folder
  * or `yarn preptest` inside the package folder
  */
-
+const path = require('path');
 const fs = require('fs');
 const chai = require('chai');
 const Eth = require('../src/eth');
@@ -40,8 +40,10 @@ describe('eth', () => {
   before(async () => {
     snapshot = await utils.makeSnapshot();
 
+    const filename = path.join(__dirname, 'migrations.log');
+    console.log(`Loading migrations data from ${filename}`);
     testData = JSON.parse(
-      fs.readFileSync('test/migrations.log'),
+      fs.readFileSync(filename),
     );
     storageContract = testData.contracts.storage;
     managerContract = testData.contracts.manager;

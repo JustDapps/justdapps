@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 
 const Storage = artifacts.require('Storage');
 const Manager = artifacts.require('Manager');
@@ -23,8 +24,9 @@ module.exports = function (deployer, network, accounts) {
     .then(() => storage.setManager(manager.address, true))
     .then(() => storage.setManager(accounts[1], true))
     .then(() => {
+      const filename = path.join(__dirname, '/../migrations.log');
       fs.writeFileSync(
-        './migrations.log',
+        filename,
         JSON.stringify({
           params: {
             initialData,
@@ -45,5 +47,6 @@ module.exports = function (deployer, network, accounts) {
         null,
         '\t'),
       );
+      console.log(`Saved contract data to ${filename}`);
     });
 };
