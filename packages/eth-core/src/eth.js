@@ -30,7 +30,7 @@ Eth.NodeProvider = NodeProvider;
  * @param {*[]} args array of arguments for a method
  * @param {Object} options Web3 options for a call (gasPrice, from, etc.)
  *
- * @returns {Promise} Promise that resolves to a resulting value of a call, see web3.eth.Contract.myMethod.call
+ * @returns {Promise} Resulting value of a web3.eth.Contract.method.call
  * @throws Exception is thrown if contract reverts or no method exists, or any other error occurs
  */
 Eth.prototype.callContract = async function call(
@@ -61,7 +61,7 @@ Eth.prototype.callContract = async function call(
  * @param {string} method name of a method to call
  * @param {*[]} args array of arguments for a method
  * @param {Object} options Web3 options for a call (nonce, gasPrice, from, value)
- * @returns {Promise} Promise that resolves to web3 transaction object {from, to, data, ...}
+ * @returns {Promise} Resulting web3 transaction object {from, to, data, ...}
  */
 Eth.prototype.createUnsignedTx = async function createUnsignedTx(
   address, abi, networkId, method, args = [], options = {},
@@ -96,7 +96,7 @@ Eth.prototype.createUnsignedTx = async function createUnsignedTx(
 /**
  * Sends signed transaction to the blockchain
  * @param {string} signedTx signed transaction in HEX format, string starting with '0x'
- * @returns {Promise} Promise that resolves to transaction hash that is available immediately
+ * @returns {Promise} Transaction hash that is available immediately
  */
 Eth.prototype.sendSignedTx = function sendSignedTx(
   signedTx, networkId,
