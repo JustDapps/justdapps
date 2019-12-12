@@ -6,3 +6,4 @@ before_install:
   - yarn global add mocha
 script:
   - yarn test:data
+  - yarn test:api
