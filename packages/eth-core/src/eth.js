@@ -49,10 +49,6 @@ Eth.prototype.callContract = async function call(
 
 /**
  * Creates unsigned transaction object. \
- * If options.gas is not set calls web3.eth.estimatesGas to calculate the amount \
- * If options.nonce is not set, it calculates current nonce \
- * If options.value is not set, it sets to '0'
- * If options.gasPrice is not set, it calls web3.eth.getGasPrice to calculate it
  * If options.from is not set, it rejects with EthError
  *
  * @param {string} address address of a contract, checksum is not required
@@ -66,13 +62,51 @@ Eth.prototype.callContract = async function call(
 Eth.prototype.createUnsignedTx = async function createUnsignedTx(
   address, abi, networkId, method, args = [], options = {},
 ) {
+  const contractMethod = this.createContract(address, abi, networkId).methods[method](...args);
+
+  const txOptions = await this.createTxOptions(contractMethod, networkId, options);
+  return {
+    to: address,
+    ...txOptions,
+  };
+};
+
+/**
+ * Creates unsigned transaction that deploys contract code.
+ *
+ * @param {string} bytecode compiled bytecode of a contract, starting with 0x
+ * @param {Object[]} abi ABI-array of a contract
+ * @param {(string|number)} networkId network id of a contract
+ * @param {*[]} args array of arguments for a constructor
+ * @param {Object} options Web3 options for a call. See `createUnsignedTx` for more info.
+ * @returns {Promise} Resulting web3 transaction object {from, to, data, ...}
+ */
+Eth.prototype.createUnsignedDeployTx = async function createUnsignedDeployTx(
+  bytecode, abi, networkId, args = [], options = {},
+) {
+  const contractMethod = this.createContract(undefined, abi, networkId)
+    .deploy({ data: bytecode, arguments: args });
+
+  const txOptions = await this.createTxOptions(contractMethod, networkId, options);
+  return {
+    ...txOptions,
+  };
+};
+
+/**
+ * Creates tx options fields, based on passed options object and contract method.
+ * If options.gas is not set calls web3.eth.estimatesGas to calculate the amount \
+ * If options.nonce is not set, it calculates current nonce \
+ * If options.value is not set, it sets to '0'
+ * If options.gasPrice is not set, it calls web3.eth.getGasPrice to calculate it
+ */
+Eth.prototype.createTxOptions = async function createTxOptions(contractMethod, networkId, options) {
   if (!options.from) {
     throw new EthError('No sender address specified');
   }
+
   const web3 = this.nodeProvider.web3For(networkId);
 
-  const contract = this.createContract(address, abi, networkId);
-  const contractMethod = contract.methods[method](...args);
   const data = contractMethod.encodeABI();
 
   const nonce = options.nonce
@@ -82,11 +116,12 @@ Eth.prototype.createUnsignedTx = async function createUnsignedTx(
 
   const gas = options.gas || await this.estimateGas(contractMethod, options);
 
+  const value = options.value || 0;
+
   return {
     from: options.from,
-    to: address,
-    value: options.value || 0,
     nonce,
+    value,
     gas,
     gasPrice,
     data,
