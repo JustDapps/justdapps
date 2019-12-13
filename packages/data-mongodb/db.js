@@ -34,5 +34,8 @@ module.exports = {
     update(modelProperties, id) {
       return Model.update(modelProperties, id);
     },
+    getDappEntity(name, modelId, dappId) {
+      return Model.getDappEntity(name, modelId, dappId);
+    },
   },
 };

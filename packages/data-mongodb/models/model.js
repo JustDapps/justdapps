@@ -11,8 +11,6 @@ const entityType = mongoose.Schema({
   name: { type: String, required: true },
   address: { type: String, default: '' },
   abi: String,
-  code: String,
-  compiler: String,
 }, { _id: false });
 
 const relationType = mongoose.Schema({
@@ -88,6 +86,15 @@ modelSchema.statics.update = function update(modelProperties, id) {
     { useFindAndModify: false },
   ).exec()
     .then((response) => (!!response));
+};
+
+/**
+ * Returns one of the dapp's entities by its name and a modelId-dappId pair
+ */
+modelSchema.statics.getDappEntity = function getDappEntity(name, modelId, dappId) {
+  return this.findById(modelId)
+    .select({ dapps: { $elemMatch: { _id: new ObjectId(dappId) } } })
+    .then(({ dapps }) => dapps[0].entities.find((entity) => entity.name === name));
 };
 
 

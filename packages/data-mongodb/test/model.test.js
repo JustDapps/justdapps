@@ -52,10 +52,45 @@ describe('db.model', () => {
   console.log('user2: [model3]');
   console.log('user3: []');
 
+  const model1 = {
+    name: 'model1',
+    entities: [{
+      name: 'contract1',
+      abi: '[]',
+    }, {
+      name: 'contract2',
+      abi: '[]',
+    },
+    ],
+    dapps: [{
+      networkId: 1,
+      entities: [{
+        name: 'contract1',
+        address: 'address.1.1',
+        abi: '[]',
+      }, {
+        name: 'contract2',
+        address: 'address.1.2',
+        abi: '[]',
+      }],
+    }, {
+      networkId: 3,
+      entities: [{
+        name: 'contract1',
+        address: 'address.2.1',
+        abi: '[]',
+      }, {
+        name: 'contract2',
+        address: 'address.2.2',
+        abi: '[]',
+      }],
+    }],
+  };
+
   beforeEach(async () => {
     await cleanup();
     userIds = await addGoogleUsers(['user1', 'user2', 'user3']);
-    user1Models = await addModelsForUser([{ name: 'model1' }, { name: 'model2' }], 'user1');
+    user1Models = await addModelsForUser([model1, { name: 'model2' }], 'user1');
     user2Models = await addModelsForUser([{ name: 'model3' }], 'user2');
   });
 
@@ -149,6 +184,19 @@ describe('db.model', () => {
     it('should change nothing if model id does not exist, return false', async () => {
       const result = await db.model.update({ description: '' }, userIds.user1);
       expect(result).to.equal(false);
+    });
+  });
+
+  describe('getDappEntity', async () => {
+    it('should return entity of specified dapp', async () => {
+      const model = await Model.findById(user1Models.model1);
+      const dappId = model.dapps[0]._id;
+
+      const entity = await db.model.getDappEntity('contract1', user1Models.model1, dappId);
+
+      expect(entity).to.have.property('name', 'contract1');
+      expect(entity).to.have.property('address', 'address.1.1');
+      expect(entity).to.have.property('abi', '[]');
     });
   });
 });
