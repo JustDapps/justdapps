@@ -6,7 +6,7 @@ const sinon = require('sinon');
 const passport = require('passport');
 const MockStrategy = require('passport-mock-strategy');
 const initPassport = require('../auth/passport');
-const { createToken, verifyToken } = require('../auth/token');
+const { verifyToken } = require('../auth/token');
 const initApp = require('../app');
 const { extractCookie } = require('./utils');
 
