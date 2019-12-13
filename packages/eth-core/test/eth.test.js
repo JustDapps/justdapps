@@ -222,6 +222,29 @@ describe('eth', () => {
     });
   });
 
+  describe('create deploy tx', () => {
+    let result;
+
+    before(async () => {
+      result = await eth.createUnsignedDeployTx(
+        storageContract.bytecode,
+        storageContract.abi,
+        networkId,
+        [100],
+        { from: testData.params.admin },
+      );
+    });
+
+    it('`to` field should be empty', async () => {
+      expect(result.to).to.equal(undefined);
+    });
+
+
+    it('`data` field should start with special constructor prefix', async () => {
+      expect(result.data).to.startWith('0x60806040');
+    });
+  });
+
   describe('sendSignedTx', () => {
     let web3;
     const ownerPrivateKey = '0x5aeeaa1762e08e2de4ad467a4344c5942259eeb24031e356cdef26268099542f';

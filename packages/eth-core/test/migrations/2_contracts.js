@@ -37,6 +37,7 @@ module.exports = function (deployer, network, accounts) {
             storage: {
               address: storage.address,
               abi: storage.abi,
+              bytecode: storage.constructor.bytecode,
             },
             manager: {
               address: manager.address,
