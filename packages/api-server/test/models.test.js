@@ -9,23 +9,23 @@ const chai = require('chai');
 const sinon = require('sinon');
 const initApp = require('../app');
 const { createToken } = require('../auth/token.js');
-const { setCookie } = require('./utils');
+const { tokenCookieSetter, createInvalidAuthTokenTest } = require('./utils');
 chai.use(require('chai-http'));
 
 const { expect } = chai;
 
 const authUserId = 'id1';
-const nonAuthUserId = 'id2';
 
 describe('/models', () => {
-  let token;
-
-  const setTokenCookie = (req) => setCookie(req, 'token', token);
+  let setTokenCookie;
+  const testInvalidAuthToken = createInvalidAuthTokenTest(expect);
 
   before(() => {
-    token = createToken({
-      id: authUserId,
-    });
+    setTokenCookie = tokenCookieSetter(
+      createToken({
+        id: authUserId,
+      }),
+    );
   });
 
   describe('/GET - fetch by user id', () => {
@@ -58,13 +58,7 @@ describe('/models', () => {
       expect(dataSource.model.findByUser.calledWith(authUserId)).to.equal(true, 'invalid method call');
     });
 
-    it('return code 401 in case of invalid auth token', async () => {
-      const request = setCookie(chai.request(app).get('/models'), 'token', 'INVALID TOKEN');
-
-      const response = await request;
-
-      expect(response).to.have.status(401);
-    });
+    testInvalidAuthToken(() => chai.request(app).get('/models'));
 
     it('return code 401 in case of no auth token in cookies', async () => {
       const request = chai.request(app).get('/models');
@@ -97,13 +91,7 @@ describe('/models', () => {
     });
 
 
-    it('return code 401 in case of invalid auth token', async () => {
-      const request = setCookie(chai.request(app).post('/models'), 'token', 'INVALID TOKEN');
-
-      const response = await request;
-
-      expect(response).to.have.status(401);
-    });
+    testInvalidAuthToken(() => chai.request(app).post('/models'));
 
     it('return code 200 and new model id in response body, Database `addForUser` methods called with correct parameters', async () => {
       const request = setTokenCookie(
@@ -178,13 +166,7 @@ describe('/models', () => {
       expect(response.body.error).to.be.a('string', 'invalid response').and.not.empty;
     });
 
-    it('return code 401 in case of invalid auth token', async () => {
-      const request = setCookie(chai.request(app).put('/models'), 'token', 'INVALID TOKEN');
-
-      const response = await request;
-
-      expect(response).to.have.status(401);
-    });
+    testInvalidAuthToken(() => chai.request(app).put('/models'));
   });
 
   describe('/DELETE - delete specific model', () => {
@@ -241,12 +223,6 @@ describe('/models', () => {
       expect(response.body.error).to.be.a('string', 'invalid response').and.not.empty;
     });
 
-    it('return code 401 in case of invalid auth token', async () => {
-      const request = setCookie(chai.request(app).delete('/models'), 'token', 'INVALID TOKEN');
-
-      const response = await request;
-
-      expect(response).to.have.status(401);
-    });
+    testInvalidAuthToken(() => chai.request(app).delete('/models'));
   });
 });

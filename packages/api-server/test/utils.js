@@ -23,7 +23,29 @@ const setCookie = (req, name, value) => {
   return req.set('Cookie', cookies);
 };
 
+/**
+ * Attaches `token` cookie to request
+ * @param {*} token auth token
+ */
+const tokenCookieSetter = (token) => (req) => setCookie(req, 'token', token);
+
+/** Sets `token` cookie to some invalid value */
+const setInvalidTokenCookie = (req) => setCookie(req, 'token', 'INVALID TOKEN');
+
+const createInvalidAuthTokenTest = (expect) => (createRequest) => it(
+  'return code 401 in case of invalid auth token',
+  async () => {
+    const request = setInvalidTokenCookie(createRequest());
+
+    const response = await request;
+
+    expect(response).to.have.status(401);
+  },
+);
 module.exports = {
   extractCookie,
   setCookie,
+  tokenCookieSetter,
+  setInvalidTokenCookie,
+  createInvalidAuthTokenTest,
 };
