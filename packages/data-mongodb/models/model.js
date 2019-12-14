@@ -90,11 +90,14 @@ modelSchema.statics.update = function update(modelProperties, id) {
 
 /**
  * Returns one of the dapp's entities by its name and a modelId-dappId pair
+ * If specific dapp or entity can't be found, return null
  */
 modelSchema.statics.getDappEntity = function getDappEntity(name, modelId, dappId) {
   return this.findById(modelId)
     .select({ dapps: { $elemMatch: { _id: new ObjectId(dappId) } } })
-    .then(({ dapps }) => dapps[0].entities.find((entity) => entity.name === name));
+    .then(({ dapps }) => (dapps.length > 0
+      ? (dapps[0].entities.find((entity) => entity.name === name) || null)
+      : null));
 };
 
 
