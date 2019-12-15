@@ -7,8 +7,9 @@ const cors = require('cors');
 const initPassport = require('./auth/passport');
 const indexRouter = require('./routes/index');
 const dataProvider = require('./middlewares/dataProvider');
+const ethProvider = require('./middlewares/ethProvider');
 
-module.exports = (dataSource) => {
+module.exports = (dataSource, ethSource) => {
   initPassport();
   const app = express();
 
@@ -29,6 +30,7 @@ module.exports = (dataSource) => {
   app.use(express.urlencoded({ extended: false }));
   app.use(cookieParser());
   app.use(dataProvider(dataSource));
+  app.use(ethProvider(ethSource));
 
   app.use('/', indexRouter);
 
@@ -37,7 +39,7 @@ module.exports = (dataSource) => {
     next(createError(404));
   });
 
-  // error handler
+  // global error handler
   app.use((err, req, res, next) => {
     // set locals, only providing error in development
     res.locals.message = err.message;
@@ -49,4 +51,3 @@ module.exports = (dataSource) => {
 
   return app;
 };
-// module.exports = app;
