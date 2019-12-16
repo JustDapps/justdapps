@@ -7,6 +7,6 @@ function EthError(message) {
 }
 EthError.prototype = Object.create(Error.prototype);
 EthError.prototype.constructor = EthError;
-EthError.prototype.name = 'EthException';
+EthError.prototype.name = 'EthError';
 
 module.exports = EthError;
