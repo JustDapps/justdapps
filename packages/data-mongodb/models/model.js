@@ -95,9 +95,21 @@ modelSchema.statics.update = function update(modelProperties, id) {
 modelSchema.statics.getDappEntity = function getDappEntity(name, modelId, dappId) {
   return this.findById(modelId)
     .select({ dapps: { $elemMatch: { _id: new ObjectId(dappId) } } })
-    .then(({ dapps }) => (dapps.length > 0
-      ? (dapps[0].entities.find((entity) => entity.name === name) || null)
-      : null));
+    .then(({ dapps }) => {
+      if (dapps.length > 0) {
+        const entity = dapps[0].entities.find((item) => item.name === name);
+        if (entity) {
+          return {
+            networkId: dapps[0].networkId,
+            abi: entity.abi,
+            address: entity.address,
+            name: entity.name,
+          };
+        }
+        return null;
+      }
+      return null;
+    });
 };
 
 

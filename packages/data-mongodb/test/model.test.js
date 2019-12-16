@@ -198,7 +198,7 @@ describe('db.model', () => {
 
     it('should return specified entity of the dapp', async () => {
       const entity = await db.model.getDappEntity('contract1', user1Models.model1, dappId);
-
+      expect(entity).to.have.property('networkId', model1.dapps[0].networkId);
       expect(entity).to.have.property('name', 'contract1');
       expect(entity).to.have.property('address', 'address.1.1');
       expect(entity).to.have.property('abi', '[]');
