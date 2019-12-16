@@ -2,7 +2,6 @@
 const chai = require('chai');
 const sinon = require('sinon');
 const initApp = require('../app');
-const { createToken } = require('../auth/token.js');
 const { tokenCookieSetter, createInvalidAuthTokenTest } = require('./utils');
 chai.use(require('chai-http'));
 
@@ -22,14 +21,10 @@ describe('/eth', () => {
   const testInvalidAuthToken = createInvalidAuthTokenTest(expect);
 
   before(() => {
-    setTokenCookie = tokenCookieSetter(
-      createToken({
-        id: authUserId,
-      }),
-    );
+    setTokenCookie = tokenCookieSetter(authUserId);
   });
 
-  describe.only('/call', () => {
+  describe('/call', () => {
     let app;
     let dataSource;
     let ethSource;
@@ -177,7 +172,7 @@ describe('/eth', () => {
     });
 
     describe('/methodtx', () => {
-
+      let app;
     });
 
     describe('/deploytx', () => {

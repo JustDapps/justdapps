@@ -1,3 +1,5 @@
+const { createToken } = require('../auth/token.js');
+
 /**
  * Extracts specific cookie from the response
  * @param {*} res response as in Chai-http
@@ -27,7 +29,7 @@ const setCookie = (req, name, value) => {
  * Attaches `token` cookie to request
  * @param {*} token auth token
  */
-const tokenCookieSetter = (token) => (req) => setCookie(req, 'token', token);
+const tokenCookieSetter = (userId) => (req) => setCookie(req, 'token', createToken({ id: userId }));
 
 /** Sets `token` cookie to some invalid value */
 const setInvalidTokenCookie = (req) => setCookie(req, 'token', 'INVALID TOKEN');

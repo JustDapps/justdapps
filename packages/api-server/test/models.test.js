@@ -1,14 +1,12 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /**
  * To simulate auth process first we need to obtain application-signed token
- * Use `createToken` from auth/token.js for this purpose
  * Obtained token should be sent in cookies
  */
 
 const chai = require('chai');
 const sinon = require('sinon');
 const initApp = require('../app');
-const { createToken } = require('../auth/token.js');
 const { tokenCookieSetter, createInvalidAuthTokenTest } = require('./utils');
 chai.use(require('chai-http'));
 
@@ -21,11 +19,7 @@ describe('/models', () => {
   const testInvalidAuthToken = createInvalidAuthTokenTest(expect);
 
   before(() => {
-    setTokenCookie = tokenCookieSetter(
-      createToken({
-        id: authUserId,
-      }),
-    );
+    setTokenCookie = tokenCookieSetter(authUserId);
   });
 
   describe('/GET - fetch by user id', () => {
