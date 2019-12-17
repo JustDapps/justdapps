@@ -23,15 +23,19 @@ module.exports.callContract = [
 
   (req, res, next) => {
     let abiArray = [];
-    return req.dataSource.model.getDappEntity(req.body.entity, req.body.modelId, req.body.dappId)
+    const {
+      entity, modelId, dappId, method, args, options,
+    } = req.body;
+
+    return req.dataSource.model.getDappEntity(entity, modelId, dappId)
       .then(({ address, abi, networkId }) => {
         abiArray = JSON.parse(abi);
         return req.ethSource.callContract(
-          address, abiArray, networkId, req.body.method, req.body.args, req.body.options,
+          address, abiArray, networkId, method, args, options,
         );
       })
       .then((callResult) => {
-        const { outputs } = abiArray.find(({ name }) => name === req.body.method);
+        const { outputs } = abiArray.find(({ name }) => name === method);
         const richCallResult = addTypesToCallResult(callResult, outputs);
         res.status(200).json(responseBody(richCallResult));
       })
@@ -43,3 +47,21 @@ module.exports.callContract = [
         }
       });
   }];
+
+/**
+ * Params and returns are the same as /POST /eth/methodtx route has
+ */
+module.exports.createUnsignedTx = [
+  accessModel,
+
+  (req, res, next) => {
+    const abiArray = [];
+    const {
+      entity, modelId, dappId, method, args, options,
+    } = req.body;
+
+    return req.dataSource.model.getDappEntity(entity, modelId, dappId)
+      .then(({ address, abi, networkId }) => {
+      });
+  },
+];
