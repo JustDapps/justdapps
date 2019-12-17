@@ -8,8 +8,7 @@ const router = express.Router();
 router.use(requireAuth);
 
 router.post('/call', ethController.callContract);
-
-// router.post('/methodtx', null);
+router.post('/methodtx', ethController.createUnsignedTx);
 // router.post('/deploytx', null);
 // router.post('/send', null);
 
