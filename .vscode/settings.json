@@ -3,5 +3,8 @@
     "eslint.packageManager": "yarn",
     "eslint.run": "onSave",
     "eslint.autoFixOnSave": true,
-    "eslint.alwaysShowStatus": true
+    "eslint.alwaysShowStatus": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+    }
 }
