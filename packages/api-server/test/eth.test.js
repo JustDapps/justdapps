@@ -22,6 +22,7 @@ describe('/eth', () => {
   const methodArgs = [1, 2, 'three'];
   const method = 'method1';
   const contract1Abi = '[{"name": "method1","outputs": [{"internalType": "uint256", "name": "", "type": "uint256"},{"internalType": "bool","name": "","type": "bool"},{"internalType": "string", "name": "","type": "string"}]}, {"name": "method2"}]';
+  const contract1AbiArray = JSON.parse(contract1Abi);
   const entityModel = {
     address: entityAddress,
     name: entityName,
@@ -29,12 +30,10 @@ describe('/eth', () => {
     networkId,
   };
 
-  let setTokenCookie;
+  const setTokenCookie = tokenCookieSetter(authUserId);
   const testInvalidAuthToken = createInvalidAuthTokenTest(expect);
 
   before(() => {
-    setTokenCookie = tokenCookieSetter(authUserId);
-
     // dataSource methods don't work by default
     dataSource = {
       model: {
@@ -56,7 +55,7 @@ describe('/eth', () => {
     };
   });
 
-  describe.only('/call', () => {
+  describe('/call', () => {
     let app;
     let ethSource;
 
@@ -97,6 +96,8 @@ describe('/eth', () => {
       after(() => {
         dataSource.model.getDappEntity.resetHistory();
         dataSource.model.checkOwner.resetHistory();
+        errorDataSource.model.getDappEntity.resetHistory();
+        errorDataSource.model.checkOwner.resetHistory();
       });
 
       it('return code 200', async () => expect(response).to.have.status(200));
@@ -120,7 +121,7 @@ describe('/eth', () => {
 
       it('call ethSource.callContract with correct arguments', () => expect(
         ethSource.callContract.calledWith(
-          entityModel.address, JSON.parse(entityModel.abi), networkId, method, methodArgs, options,
+          entityModel.address, contract1AbiArray, networkId, method, methodArgs, options,
         ),
       ).to.equal(true));
     });
@@ -220,13 +221,10 @@ describe('/eth', () => {
         createUnsignedTx: sinon.stub().rejects({ name: 'EthError', message: 'ERROR' }),
       };
       ethSource.createUnsignedTx.withArgs(
-        entityAddress, contract1Abi, networkId, method, methodArgs, options,
+        entityAddress, contract1AbiArray, networkId, method, methodArgs, options,
       ).resolves(resultingTx);
-      app = initApp(dataSource, ethSource);
-    });
 
-    afterEach(() => {
-      ethSource.createUnsignedTx.resetHistory();
+      app = initApp(dataSource, ethSource);
     });
 
     describe('successful request should ...', () => {
@@ -235,6 +233,10 @@ describe('/eth', () => {
       before(async () => {
         const request = createRequest();
         response = await request;
+      });
+
+      after(() => {
+        ethSource.createUnsignedTx.resetHistory();
       });
 
       it('return code 200', () => expect(response).to.have.status(200));
@@ -250,19 +252,18 @@ describe('/eth', () => {
 
       it('call ethSource.createUnsignedTx with correct parameters', () => expect(
         ethSource.createUnsignedTx.calledWith(
-          entityModel.address, JSON.parse(entityModel.abi), networkId, method, [], options,
+          entityModel.address, contract1AbiArray, networkId, method, methodArgs, options,
         ),
       ).to.equal(true));
     });
 
     describe('errors', () => {
-      testInvalidAuthToken(() => app.post('/eth/methodtx'));
+      testInvalidAuthToken(() => chai.request(app).post('/eth/methodtx'));
 
-      it('should return code 400 if no `from` address specified in options', async () => {
+      it('should return code 400 if EthError is thrown', async () => {
         const response = await createRequest({ options: {} });
 
         expect(response).to.have.status(400);
-        expect(response.body.error).to.equal('No sender address specified');
       });
 
       it('return code 403 if user doesn`t have access to model', async () => {
