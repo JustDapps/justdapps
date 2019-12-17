@@ -55,13 +55,27 @@ module.exports.createUnsignedTx = [
   accessModel,
 
   (req, res, next) => {
-    const abiArray = [];
+    let abiArray = [];
     const {
       entity, modelId, dappId, method, args, options,
     } = req.body;
 
     return req.dataSource.model.getDappEntity(entity, modelId, dappId)
       .then(({ address, abi, networkId }) => {
+        abiArray = JSON.parse(abi);
+        return req.ethSource.createUnsignedTx(
+          address, abiArray, networkId, method, args, options,
+        );
+      })
+      .then((txObj) => {
+        res.status(200).json(responseBody(txObj));
+      })
+      .catch((e) => {
+        if (e.name === 'EthError') {
+          res.status(400).json(responseError(e.message));
+        } else {
+          res.status(500).json(responseError(e.message));
+        }
       });
   },
 ];
