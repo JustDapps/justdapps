@@ -56,13 +56,6 @@ describe('/eth', () => {
     };
   });
 
-  afterEach(() => {
-    dataSource.model.getDappEntity.resetHistory();
-    dataSource.model.checkOwner.resetHistory();
-    errorDataSource.model.getDappEntity.resetHistory();
-    errorDataSource.model.checkOwner.resetHistory();
-  });
-
   describe.only('/call', () => {
     let app;
     let ethSource;
@@ -101,6 +94,11 @@ describe('/eth', () => {
         response = await request;
       });
 
+      after(() => {
+        dataSource.model.getDappEntity.resetHistory();
+        dataSource.model.checkOwner.resetHistory();
+      });
+
       it('return code 200', async () => expect(response).to.have.status(200));
 
       it('return an array of {value, type} in the response body', () => {
@@ -122,12 +120,17 @@ describe('/eth', () => {
 
       it('call ethSource.callContract with correct arguments', () => expect(
         ethSource.callContract.calledWith(
-          entityModel.address, JSON.parse(entityModel.abi), networkId, method, args, options,
+          entityModel.address, JSON.parse(entityModel.abi), networkId, method, methodArgs, options,
         ),
       ).to.equal(true));
     });
 
     describe('errors', () => {
+      afterEach(() => {
+        dataSource.model.getDappEntity.resetHistory();
+        dataSource.model.checkOwner.resetHistory();
+      });
+
       testInvalidAuthToken(() => chai.request(app)
         .post('/eth/call')
         .send({
@@ -226,7 +229,7 @@ describe('/eth', () => {
       ethSource.createUnsignedTx.resetHistory();
     });
 
-    describe.only('successful request should ...', () => {
+    describe('successful request should ...', () => {
       let response;
 
       before(async () => {
