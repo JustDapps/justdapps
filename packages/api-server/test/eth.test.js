@@ -17,7 +17,6 @@ const allowedAddress = '0x2222222222222222222222222222222222222222';
 const nonallowedAddress = '0x1111111111111111111111111111111111111111';
 
 describe('/eth', () => {
-  // TODO fix tests: response.body.body to response.body.body.property
   let dataSource;
   let errorDataSource;
   const methodArgs = [1, 2, 'three'];
@@ -104,7 +103,7 @@ describe('/eth', () => {
       it('return code 200', async () => expect(response).to.have.status(200));
 
       it('return an array of {value, type} in the response body', () => {
-        expect(response.body.body).to.deep.equal([{
+        expect(response.body.body.results).to.deep.equal([{
           value: ethCallResult[0],
           type: 'uint256',
         }, {
@@ -247,7 +246,7 @@ describe('/eth', () => {
       it('return code 200', () => expect(response).to.have.status(200));
 
       it('return a tx object in response body', () => expect(
-        response.body.body,
+        response.body.body.tx,
       ).has.all.keys('from', 'to', 'gas', 'gasPrice', 'value', 'nonce', 'data'));
 
       it('call dataSource.getDappEntity with correct parameters', () => expect(
@@ -364,7 +363,7 @@ describe('/eth', () => {
       it('return code 200', () => expect(response).to.have.status(200));
 
       it('return a tx object in response body', () => expect(
-        response.body.body,
+        response.body.body.tx,
       ).has.all.keys('from', 'gas', 'gasPrice', 'value', 'nonce', 'data'));
 
       it('call dataSource.getModelEntity with correct parameters', () => expect(
