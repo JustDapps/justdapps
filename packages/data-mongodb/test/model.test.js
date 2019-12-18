@@ -213,5 +213,28 @@ describe('db.model', () => {
       const entity = await db.model.getDappEntity('contract1', user1Models.model1, user1Models.model2);
       expect(entity).to.equal(null);
     });
+
+    it('return null if model doesn`t exist', async () => {
+      const entity = await db.model.getDappEntity('contract1', userIds.user1, dappId);
+      expect(entity).to.equal(null);
+    });
+  });
+
+  describe('getModelEntity', async () => {
+    it('should return specified entity of the dapp', async () => {
+      const entity = await db.model.getModelEntity('contract1', user1Models.model1);
+      expect(entity).to.have.property('name', 'contract1');
+      expect(entity).to.have.property('abi', '[]');
+    });
+
+    it('return null if entity doesn`t exist', async () => {
+      const entity = await db.model.getModelEntity('non-entity', user1Models.model1);
+      expect(entity).to.equal(null);
+    });
+
+    it('return null if model doesn`t exist', async () => {
+      const entity = await db.model.getModelEntity('contract1', userIds.user1);
+      expect(entity).to.equal(null);
+    });
   });
 });

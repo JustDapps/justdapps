@@ -37,5 +37,8 @@ module.exports = {
     getDappEntity(name, modelId, dappId) {
       return Model.getDappEntity(name, modelId, dappId);
     },
+    getModelEntity(name, modelId) {
+      return Model.getModelEntity(name, modelId);
+    }
   },
 };

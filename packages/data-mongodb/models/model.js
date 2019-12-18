@@ -91,16 +91,22 @@ modelSchema.statics.update = function update(modelProperties, id) {
 /**
  * Returns one of the dapp's entities by its name and a modelId-dappId pair
  * If specific dapp or entity can't be found, return null
+ *
+ * @returns {Object} returns dapp entity object {networkId, abi, address, name}
+ * or null if it doesn`t exist
  */
 modelSchema.statics.getDappEntity = function getDappEntity(name, modelId, dappId) {
   return this.findById(modelId)
     .select({ dapps: { $elemMatch: { _id: new ObjectId(dappId) } } })
-    .then(({ dapps }) => {
-      if (dapps.length > 0) {
-        const entity = dapps[0].entities.find((item) => item.name === name);
+    .then((model) => {
+      if (!model) {
+        return null;
+      }
+      if (model.dapps.length > 0) {
+        const entity = model.dapps[0].entities.find((item) => item.name === name);
         if (entity) {
           return {
-            networkId: dapps[0].networkId,
+            networkId: model.dapps[0].networkId,
             abi: entity.abi,
             address: entity.address,
             name: entity.name,
@@ -112,6 +118,31 @@ modelSchema.statics.getDappEntity = function getDappEntity(name, modelId, dappId
     });
 };
 
+
+/**
+ * Returns one of the model's entities by its name
+ * If specific entity can't be found, return null
+ *
+ * @returns {Object} returns entity object {abi, address, name} or null if entity doesn`t exist
+ */
+modelSchema.statics.getModelEntity = function getModelEntity(name, modelId) {
+  return this.findById(modelId)
+    .select('entities')
+    .then((model) => {
+      if (!model) {
+        return null;
+      }
+      const entity = model.entities.find((item) => item.name === name);
+      if (entity) {
+        return {
+          abi: entity.abi,
+          address: entity.address,
+          name: entity.name,
+        };
+      }
+      return null;
+    });
+};
 
 const model = mongoose.model('Model', modelSchema);
 module.exports = model;
