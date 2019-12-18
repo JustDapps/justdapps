@@ -12,9 +12,10 @@ const modelId = 'modelId1';
 const anotherModelId = 'anotherModelId1';
 const dappId = 'dappId1';
 const entityName = 'storage';
+const nonEntityName = 'administrator';
 const entityAddress = '0x3333333333333333333333333333333333333333';
 const allowedAddress = '0x2222222222222222222222222222222222222222';
-const nonallowedAddress = '0x1111111111111111111111111111111111111111';
+const nonEntityAddress = '0x1111111111111111111111111111111111111111';
 
 describe('/eth', () => {
   let dataSource;
@@ -29,6 +30,10 @@ describe('/eth', () => {
     abi: contract1Abi,
     networkId,
   };
+  const nonEntity = {
+    address: nonEntityAddress,
+    name: nonEntityName,
+  };
 
   // setting helpers
   const setTokenCookie = tokenCookieSetter(authUserId);
@@ -40,6 +45,7 @@ describe('/eth', () => {
 
   const getDappEntityStub = sinon.stub().resolves(null);
   getDappEntityStub.withArgs(entityName, modelId, dappId).resolves(entityModel);
+  getDappEntityStub.withArgs(nonEntityName, modelId, dappId).resolves(nonEntity);
 
   before(() => {
     dataSource = {
@@ -59,7 +65,6 @@ describe('/eth', () => {
   });
 
   describe('/call', () => {
-    // TODO Tests if entity is not smart contract
     let app;
     let ethSource;
 
@@ -127,11 +132,6 @@ describe('/eth', () => {
     });
 
     describe('errors', () => {
-      // afterEach(() => {
-      //   dataSource.model.getDappEntity.resetHistory();
-      //   dataSource.model.checkOwner.resetHistory();
-      // });
-
       testInvalidAuthToken(() => chai.request(app)
         .post('/eth/call')
         .send({
@@ -141,6 +141,25 @@ describe('/eth', () => {
           method,
           args: methodArgs,
         }));
+
+      it('return code 400 if entity is not smart contract', async () => {
+        const request = setTokenCookie(
+          chai.request(app)
+            .post('/eth/call')
+            .send({
+              modelId,
+              dappId,
+              entity: nonEntityName,
+              method,
+              args: methodArgs,
+            }),
+        );
+
+        const response = await request;
+
+        expect(response).to.have.status(400);
+        return expect(response.body.error).to.equal('Not a smart contract');
+      });
 
       it('return code 403 if user doesn`t have access to model', async () => {
         const request = setTokenCookie(
@@ -186,7 +205,6 @@ describe('/eth', () => {
   });
 
   describe('/methodtx', () => {
-    // TODO Tests if entity is not smart contract
     let app;
     let ethSource;
     let resultingTx;
@@ -264,6 +282,15 @@ describe('/eth', () => {
     describe('errors', () => {
       testInvalidAuthToken(() => chai.request(app).post('/eth/methodtx'));
 
+      it('return code 400 if entity is not smart contract', async () => {
+        const request = createRequest({ entity: nonEntityName });
+
+        const response = await request;
+
+        expect(response).to.have.status(400);
+        return expect(response.body.error).to.equal('Not a smart contract');
+      });
+
       it('should return code 400 if EthError is thrown', async () => {
         const response = await createRequest({ options: {} });
 
@@ -293,7 +320,6 @@ describe('/eth', () => {
   });
 
   describe('/deploytx', () => {
-    // TODO Tests if entity is not smart contract
     let app;
     let getModelEntityStub;
     let ethSource;
@@ -329,6 +355,8 @@ describe('/eth', () => {
       getModelEntityStub = sinon.stub().resolves(null);
       getModelEntityStub.withArgs(entityName, modelId)
         .resolves({ name: entityModel.name, abi: entityModel.abi });
+      getModelEntityStub.withArgs(nonEntityName, modelId)
+        .resolves({ name: nonEntityName });
 
       ethSource = {
         createUnsignedDeployTx: sinon.stub().rejects({ name: 'EthError', message: 'ERROR' }),
@@ -380,6 +408,15 @@ describe('/eth', () => {
 
     describe('errors', () => {
       testInvalidAuthToken(() => chai.request(app).post('/eth/methodtx'));
+
+      it('return code 400 if entity is not smart contract', async () => {
+        const request = createRequest({ entity: nonEntityName });
+
+        const response = await request;
+
+        expect(response).to.have.status(400);
+        return expect(response.body.error).to.equal('Not a smart contract');
+      });
 
       it('should return code 400 if EthError is thrown', async () => {
         const response = await createRequest({ options: {} });
