@@ -100,7 +100,7 @@ describe('eth', () => {
       return expect(request).to.eventually.be.rejectedWith(EthError, 'No method in ABI');
     });
 
-    it('throw EthError in case of invalid method (contract doesn`t have such method)', async () => {
+    it('throw EthError in case of invalid method (deployed contract doesn`t have such method)', async () => {
       const abi = getMethodAbi(storageContract, 'getSomeValues');
 
       const request = eth.callContract(managerContract.address, abi, networkId, 'getSomeValues', [testData.params.owner]);
@@ -195,6 +195,19 @@ describe('eth', () => {
     });
 
     describe('errors', () => {
+      it('throw EthError `No method in ABI` in case of no method in ABI', async () => {
+        const request = eth.createUnsignedTx(
+          storageContract.address,
+          [],
+          networkId,
+          'uintData',
+          [],
+          { from: sender },
+        );
+
+        return expect(request).to.eventually.be.rejectedWith(EthError, 'No method in ABI');
+      });
+
       it('estimated gas of reverted method should equal to 0', async () => {
         const result = await eth.createUnsignedTx(
           storageContract.address,
@@ -222,26 +235,56 @@ describe('eth', () => {
     });
   });
 
-  describe('create deploy tx', () => {
+  describe('createUnsignedDeployTx', () => {
     let result;
 
-    before(async () => {
-      result = await eth.createUnsignedDeployTx(
-        storageContract.bytecode,
-        storageContract.abi,
-        networkId,
-        [100],
-        { from: testData.params.admin },
-      );
+    describe('check transaction properties ...', () => {
+      before(async () => {
+        result = await eth.createUnsignedDeployTx(
+          storageContract.bytecode,
+          storageContract.abi,
+          networkId,
+          [100],
+          { from: testData.params.admin },
+        );
+      });
+
+
+      it('`to` field should be empty', async () => {
+        expect(result.to).to.equal(undefined);
+      });
+
+
+      it('`data` field should start with special constructor prefix and end with hex parameter', async () => {
+        expect(result.data).to.startWith('0x60806040');
+        expect(result.data).to.endWith('64');
+      });
     });
 
-    it('`to` field should be empty', async () => {
-      expect(result.to).to.equal(undefined);
-    });
+    describe('errors', () => {
+      it('estimated gas of reverted method should equal to 0', async () => {
+        const res = await eth.createUnsignedDeployTx(
+          storageContract.bytecode,
+          storageContract.abi,
+          networkId,
+          [1234],
+          { from: testData.params.admin },
+        );
 
+        return expect(res.gas).to.equal(0);
+      });
 
-    it('`data` field should start with special constructor prefix', async () => {
-      expect(result.data).to.startWith('0x60806040');
+      it('should throw `No sender address specified` if `options.from` missing', () => {
+        const request = eth.createUnsignedDeployTx(
+          storageContract.bytecode,
+          [],
+          networkId,
+          [1],
+          {},
+        );
+
+        return expect(request).to.eventually.be.rejectedWith(EthError, 'No sender address specified');
+      });
     });
   });
 
