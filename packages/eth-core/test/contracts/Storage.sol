@@ -28,6 +28,8 @@ contract Storage is Manageable, IWallet {
     //
     // Methods
     constructor(uint256 initialData) public Manageable() {
+        require(initialData != 1234, 'Invalid initial data');
+
         mapData[owner] = 1;
 
         stringData = 'Initial';
