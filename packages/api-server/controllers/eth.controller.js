@@ -15,6 +15,13 @@ const addTypesToCallResult = (callResult, abiOutputs) => {
   }];
 };
 
+const handleError = (e, res) => {
+  if (e.name === 'EthError') {
+    return res.status(400).json(responseError(e.message));
+  }
+  return res.status(500).json(responseError(e.message));
+};
+
 /**
  * Params and returns are the same as /POST /eth/call route has
  */
@@ -39,13 +46,7 @@ module.exports.callContract = [
         const richCallResult = addTypesToCallResult(callResult, outputs);
         res.status(200).json(responseBody(richCallResult));
       })
-      .catch((e) => {
-        if (e.name === 'EthError') {
-          res.status(400).json(responseError(e.message));
-        } else {
-          res.status(500).json(responseError(e.message));
-        }
-      });
+      .catch((e) => handleError(e, res));
   }];
 
 /**
@@ -70,13 +71,7 @@ module.exports.createUnsignedTx = [
       .then((txObj) => {
         res.status(200).json(responseBody(txObj));
       })
-      .catch((e) => {
-        if (e.name === 'EthError') {
-          res.status(400).json(responseError(e.message));
-        } else {
-          res.status(500).json(responseError(e.message));
-        }
-      });
+      .catch((e) => handleError(e, res));
   },
 ];
 
@@ -102,13 +97,7 @@ module.exports.createUnsignedDeployTx = [
       .then((txObj) => {
         res.status(200).json(responseBody(txObj));
       })
-      .catch((e) => {
-        if (e.name === 'EthError') {
-          res.status(400).json(responseError(e.message));
-        } else {
-          res.status(500).json(responseError(e.message));
-        }
-      });
+      .catch((e) => handleError(e, res));
   },
 ];
 
@@ -116,11 +105,5 @@ module.exports.sendSignedTx = (req, res, next) => {
   const { tx, networkId } = req.body;
   req.ethSource.sendSignedTx(tx, networkId)
     .then((txHash) => res.status(200).json(responseBody({ txHash })))
-    .catch((e) => {
-      if (e.name === 'EthError') {
-        res.status(400).json(responseError(e.message));
-      } else {
-        res.status(500).json(responseError(e.message));
-      }
-    });
+    .catch((e) => handleError(e, res));
 };
