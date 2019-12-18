@@ -44,7 +44,9 @@ module.exports.callContract = [
       .then((callResult) => {
         const { outputs } = abiArray.find(({ name }) => name === method);
         const richCallResult = addTypesToCallResult(callResult, outputs);
-        res.status(200).json(responseBody(richCallResult));
+        res.status(200).json(
+          responseBody({ results: richCallResult }),
+        );
       })
       .catch((e) => handleError(e, res));
   }];
@@ -69,7 +71,7 @@ module.exports.createUnsignedTx = [
         );
       })
       .then((txObj) => {
-        res.status(200).json(responseBody(txObj));
+        res.status(200).json(responseBody({ tx: txObj }));
       })
       .catch((e) => handleError(e, res));
   },
@@ -95,7 +97,7 @@ module.exports.createUnsignedDeployTx = [
         );
       })
       .then((txObj) => {
-        res.status(200).json(responseBody(txObj));
+        res.status(200).json(responseBody({ tx: txObj }));
       })
       .catch((e) => handleError(e, res));
   },
