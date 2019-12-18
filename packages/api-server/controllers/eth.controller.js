@@ -1,5 +1,6 @@
 const { responseBody, responseError } = require('../utils');
 const { accessModel } = require('../middlewares/access');
+const ArgsError = require('./argsError');
 
 const addTypesToCallResult = (callResult, abiOutputs) => {
   // check if it is a single value or multiple values
@@ -16,10 +17,17 @@ const addTypesToCallResult = (callResult, abiOutputs) => {
 };
 
 const handleError = (e, res) => {
-  if (e.name === 'EthError') {
+  if (e.name === 'EthError' || e.name === 'ArgsError') {
     return res.status(400).json(responseError(e.message));
   }
   return res.status(500).json(responseError(e.message));
+};
+
+const checkAbi = (entity) => {
+  if (!entity.abi) {
+    return Promise.reject(new ArgsError('Not a smart contract'));
+  }
+  return Promise.resolve(entity);
 };
 
 /**
@@ -35,6 +43,7 @@ module.exports.callContract = [
     } = req.body;
 
     return req.dataSource.model.getDappEntity(entity, modelId, dappId)
+      .then(checkAbi)
       .then(({ address, abi, networkId }) => {
         abiArray = JSON.parse(abi);
         return req.ethSource.callContract(
@@ -64,6 +73,7 @@ module.exports.createUnsignedTx = [
     } = req.body;
 
     return req.dataSource.model.getDappEntity(entity, modelId, dappId)
+      .then(checkAbi)
       .then(({ address, abi, networkId }) => {
         abiArray = JSON.parse(abi);
         return req.ethSource.createUnsignedTx(
@@ -90,6 +100,7 @@ module.exports.createUnsignedDeployTx = [
     } = req.body;
 
     return req.dataSource.model.getModelEntity(entity, modelId)
+      .then(checkAbi)
       .then(({ abi }) => {
         abiArray = JSON.parse(abi);
         return req.ethSource.createUnsignedDeployTx(
