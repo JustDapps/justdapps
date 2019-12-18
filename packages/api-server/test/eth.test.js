@@ -17,6 +17,7 @@ const allowedAddress = '0x2222222222222222222222222222222222222222';
 const nonallowedAddress = '0x1111111111111111111111111111111111111111';
 
 describe('/eth', () => {
+  // TODO fix tests: response.body.body to response.body.body.property
   let dataSource;
   let errorDataSource;
   const methodArgs = [1, 2, 'three'];
@@ -404,6 +405,37 @@ describe('/eth', () => {
   });
 
   describe('/send', () => {
+    let app;
+    let ethSource;
+    const tx = 'signedTx';
+    const txHash = 'txhash';
 
+    const createRequest = (data = {}, requestApp = app) => setTokenCookie(
+      chai.request(requestApp).post('/eth/send').send({
+        tx: data.tx || tx,
+        networkId: data.networkId || networkId,
+      }),
+    );
+
+    before(() => {
+      ethSource = {
+        sendSignedTx: sinon.stub().rejects({ name: 'EthError', message: 'ERROR' }),
+      };
+      ethSource.sendSignedTx.withArgs(tx, networkId).resolves(txHash);
+      app = initApp(dataSource, ethSource);
+    });
+
+    it('should return code 200 and tx hash in case of successful response', async () => {
+      const response = await createRequest();
+      expect(response).to.have.status(200);
+      return expect(response.body.body.txHash).to.equal(txHash);
+    });
+
+    testInvalidAuthToken(createRequest);
+
+    it('should return code 400 in case of EthError', async () => {
+      const response = await createRequest({ tx: 'errorData' });
+      return expect(response).to.have.status(400);
+    });
   });
 });
