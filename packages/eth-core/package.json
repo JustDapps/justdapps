@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "test": "mocha",
+    "test": "mocha --timeout 20000",
     "devnode": "ganache-cli -i 999 -m occur chimney draft toddler glue typical priority indicate kick manage civil blame",
     "migrate": "cd test && truffle migrate",
     "preptest": "concurrently \"yarn:devnode\" \"yarn:migrate\""
