@@ -36,15 +36,12 @@ Eth.NodeProvider = NodeProvider;
 Eth.prototype.callContract = async function call(
   address, abi, networkId, method, args = [], options = {},
 ) {
-  const contract = this.createContract(address, abi, networkId);
-  if (contract.methods[method]) {
-    try {
-      return await contract.methods[method](...args).call(options);
-    } catch (err) {
-      throw new EthError(err.message);
-    }
+  const contractMethod = this.createContractMethod(address, abi, networkId, method, args);
+  try {
+    return await contractMethod.call(options);
+  } catch (err) {
+    throw new EthError(err.message);
   }
-  throw new EthError('No method in ABI');
 };
 
 /**
@@ -62,13 +59,17 @@ Eth.prototype.callContract = async function call(
 Eth.prototype.createUnsignedTx = async function createUnsignedTx(
   address, abi, networkId, method, args = [], options = {},
 ) {
-  const contractMethod = this.createContract(address, abi, networkId).methods[method](...args);
+  const contractMethod = this.createContractMethod(address, abi, networkId, method, args);
 
-  const txOptions = await this.createTxOptions(contractMethod, networkId, options);
-  return {
-    to: address,
-    ...txOptions,
-  };
+  try {
+    const txOptions = await this.createTxOptions(contractMethod, networkId, options);
+    return {
+      to: address,
+      ...txOptions,
+    };
+  } catch (err) {
+    throw new EthError(err.message);
+  }
 };
 
 /**
@@ -87,10 +88,14 @@ Eth.prototype.createUnsignedDeployTx = async function createUnsignedDeployTx(
   const contractMethod = this.createContract(undefined, abi, networkId)
     .deploy({ data: bytecode, arguments: args });
 
-  const txOptions = await this.createTxOptions(contractMethod, networkId, options);
-  return {
-    ...txOptions,
-  };
+  try {
+    const txOptions = await this.createTxOptions(contractMethod, networkId, options);
+    return {
+      ...txOptions,
+    };
+  } catch (err) {
+    throw new EthError(err.message);
+  }
 };
 
 /**
@@ -167,6 +172,17 @@ Eth.prototype.sendSignedTx = function sendSignedTx(
 Eth.prototype.createContract = function createContract(address, abi, networkId) {
   const web3 = this.nodeProvider.web3For(networkId);
   return new web3.eth.Contract(abi, address);
+};
+
+Eth.prototype.createContractMethod = function createContractMethod(
+  address, abi, networkId, method, args,
+) {
+  const contract = this.createContract(address, abi, networkId);
+
+  if (contract.methods[method]) {
+    return contract.methods[method](...args);
+  }
+  throw new EthError('No method in ABI');
 };
 
 /**
