@@ -79,3 +79,35 @@ module.exports.createUnsignedTx = [
       });
   },
 ];
+
+/**
+ * Params and returns are the same as /POST /eth/deploytx route has
+ */
+module.exports.createUnsignedDeployTx = [
+  accessModel,
+
+  (req, res, next) => {
+    let abiArray = [];
+    const {
+      bytecode, modelId, entity, networkId, args, options,
+    } = req.body;
+
+    return req.dataSource.model.getModelEntity(entity, modelId)
+      .then(({ abi }) => {
+        abiArray = JSON.parse(abi);
+        return req.ethSource.createUnsignedDeployTx(
+          bytecode, abiArray, networkId, args, options,
+        );
+      })
+      .then((txObj) => {
+        res.status(200).json(responseBody(txObj));
+      })
+      .catch((e) => {
+        if (e.name === 'EthError') {
+          res.status(400).json(responseError(e.message));
+        } else {
+          res.status(500).json(responseError(e.message));
+        }
+      });
+  },
+];
