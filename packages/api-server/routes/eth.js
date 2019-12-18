@@ -9,7 +9,7 @@ router.use(requireAuth);
 
 router.post('/call', ethController.callContract);
 router.post('/methodtx', ethController.createUnsignedTx);
-// router.post('/deploytx', null);
+router.post('/deploytx', ethController.createUnsignedDeployTx);
 // router.post('/send', null);
 
 module.exports = router;
