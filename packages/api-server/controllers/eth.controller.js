@@ -111,3 +111,16 @@ module.exports.createUnsignedDeployTx = [
       });
   },
 ];
+
+module.exports.sendSignedTx = (req, res, next) => {
+  const { tx, networkId } = req.body;
+  req.ethSource.sendSignedTx(tx, networkId)
+    .then((txHash) => res.status(200).json(responseBody({ txHash })))
+    .catch((e) => {
+      if (e.name === 'EthError') {
+        res.status(400).json(responseError(e.message));
+      } else {
+        res.status(500).json(responseError(e.message));
+      }
+    });
+};
