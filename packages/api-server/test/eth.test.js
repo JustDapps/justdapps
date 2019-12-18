@@ -30,32 +30,36 @@ describe('/eth', () => {
     networkId,
   };
 
+  // setting helpers
   const setTokenCookie = tokenCookieSetter(authUserId);
   const testInvalidAuthToken = createInvalidAuthTokenTest(expect);
 
+  // setting stubs
+  const checkOwnerStub = sinon.stub().resolves(false);
+  checkOwnerStub.withArgs(authUserId, modelId).resolves(true);
+
+  const getDappEntityStub = sinon.stub().resolves(null);
+  getDappEntityStub.withArgs(entityName, modelId, dappId).resolves(entityModel);
+
   before(() => {
-    // dataSource methods don't work by default
     dataSource = {
       model: {
-        checkOwner: sinon.stub().resolves(false),
-        getDappEntity: sinon.stub().resolves(null),
+        checkOwner: checkOwnerStub,
+        getDappEntity: getDappEntityStub,
       },
     };
-    // resolve true only if authUserId requests for modelId
-    dataSource.model.checkOwner.withArgs(authUserId, modelId).resolves(true);
-
-    // return model only in specific case
-    dataSource.model.getDappEntity.withArgs(entityName, modelId, dappId).resolves(entityModel);
 
     errorDataSource = {
       model: {
         checkOwner: sinon.stub().resolves(true),
         getDappEntity: sinon.stub().rejects({ message: 'UNKNOWN ERROR' }),
+        getModelEntity: sinon.stub().rejects({ message: 'UNKNOWN ERROR' }),
       },
     };
   });
 
   describe('/call', () => {
+    // TODO Tests if entity is not smart contract
     let app;
     let ethSource;
 
@@ -77,6 +81,9 @@ describe('/eth', () => {
       let response;
       const options = { from: allowedAddress };
       before(async () => {
+        dataSource.model.getDappEntity.resetHistory();
+        dataSource.model.checkOwner.resetHistory();
+
         const request = setTokenCookie(
           chai.request(app)
             .post('/eth/call')
@@ -91,13 +98,6 @@ describe('/eth', () => {
         );
 
         response = await request;
-      });
-
-      after(() => {
-        dataSource.model.getDappEntity.resetHistory();
-        dataSource.model.checkOwner.resetHistory();
-        errorDataSource.model.getDappEntity.resetHistory();
-        errorDataSource.model.checkOwner.resetHistory();
       });
 
       it('return code 200', async () => expect(response).to.have.status(200));
@@ -127,10 +127,10 @@ describe('/eth', () => {
     });
 
     describe('errors', () => {
-      afterEach(() => {
-        dataSource.model.getDappEntity.resetHistory();
-        dataSource.model.checkOwner.resetHistory();
-      });
+      // afterEach(() => {
+      //   dataSource.model.getDappEntity.resetHistory();
+      //   dataSource.model.checkOwner.resetHistory();
+      // });
 
       testInvalidAuthToken(() => chai.request(app)
         .post('/eth/call')
@@ -186,6 +186,7 @@ describe('/eth', () => {
   });
 
   describe('/methodtx', () => {
+    // TODO Tests if entity is not smart contract
     let app;
     let ethSource;
     let resultingTx;
@@ -231,6 +232,9 @@ describe('/eth', () => {
       let response;
 
       before(async () => {
+        dataSource.model.getDappEntity.resetHistory();
+        dataSource.model.checkOwner.resetHistory();
+
         const request = createRequest();
         response = await request;
       });
@@ -289,7 +293,114 @@ describe('/eth', () => {
   });
 
   describe('/deploytx', () => {
+    // TODO Tests if entity is not smart contract
+    let app;
+    let getModelEntityStub;
+    let ethSource;
+    let resultingTx;
+    const bytecode = 'bytecode';
 
+    const options = { from: allowedAddress };
+
+    // creates request with specific paramers, set in `data` object
+    const createRequest = (data = {}, requestApp = app) => setTokenCookie(
+      chai.request(requestApp)
+        .post('/eth/deploytx')
+        .send({
+          bytecode: data.bytecode || bytecode,
+          modelId: data.modelId || modelId,
+          networkId: data.networkId || networkId,
+          entity: data.entity || entityName,
+          args: data.args || methodArgs,
+          options: data.options || options,
+        }),
+    );
+
+    before(async () => {
+      resultingTx = {
+        from: options.from,
+        nonce: 1,
+        data: '0x1',
+        gas: 1,
+        gasPrice: '100',
+        value: 0,
+      };
+
+      getModelEntityStub = sinon.stub().resolves(null);
+      getModelEntityStub.withArgs(entityName, modelId)
+        .resolves({ name: entityModel.name, abi: entityModel.abi });
+
+      ethSource = {
+        createUnsignedDeployTx: sinon.stub().rejects({ name: 'EthError', message: 'ERROR' }),
+      };
+      ethSource.createUnsignedDeployTx.withArgs(
+        bytecode, contract1AbiArray, networkId, methodArgs, options,
+      ).resolves(resultingTx);
+
+      app = initApp(
+        {
+          model: {
+            checkOwner: checkOwnerStub,
+            getModelEntity: getModelEntityStub,
+          },
+        },
+        ethSource,
+      );
+    });
+
+    describe('successful request should ...', () => {
+      let response;
+
+      before(async () => {
+        const request = createRequest();
+        response = await request;
+      });
+
+      after(() => {
+        ethSource.createUnsignedDeployTx.resetHistory();
+      });
+
+      it('return code 200', () => expect(response).to.have.status(200));
+
+      it('return a tx object in response body', () => expect(
+        response.body.body,
+      ).has.all.keys('from', 'gas', 'gasPrice', 'value', 'nonce', 'data'));
+
+      it('call dataSource.getModelEntity with correct parameters', () => expect(
+        getModelEntityStub.calledWith(entityName, modelId),
+      )
+        .to.equal(true));
+
+      it('call ethSource.createUnsignedTx with correct parameters', () => expect(
+        ethSource.createUnsignedDeployTx.calledWith(
+          bytecode, contract1AbiArray, networkId, methodArgs, options,
+        ),
+      ).to.equal(true));
+    });
+
+    describe('errors', () => {
+      testInvalidAuthToken(() => chai.request(app).post('/eth/methodtx'));
+
+      it('should return code 400 if EthError is thrown', async () => {
+        const response = await createRequest({ options: {} });
+
+        expect(response).to.have.status(400);
+      });
+
+      it('return code 403 if user doesn`t have access to model', async () => {
+        const response = await createRequest({ modelId: anotherModelId });
+
+        expect(response).to.have.status(403);
+      });
+
+      it('return code 500 if unknown error occurs', async () => {
+        const errorApp = initApp(errorDataSource, ethSource);
+        const response = await createRequest({}, errorApp);
+
+        expect(response).to.have.status(500);
+        expect(response.body.error).to.equal('UNKNOWN ERROR');
+      });
+    });
   });
 
   describe('/send', () => {
